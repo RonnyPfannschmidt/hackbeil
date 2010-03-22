@@ -3,6 +3,11 @@ some convience classes for storing the data from a replay/dump
 '''
 
 
+
+class BranchTool(object):
+    branch_matches = [
+    ]
+
 class Node(object):
     def __init__(self, node):
         self.kind = node.get('Node-kind')
@@ -17,6 +22,7 @@ class Revision(object):
     filters = []
     def __init__(self, entry, nodes=()):
         self.entry = entry
+        self.branch = ''
         self.nodes = [
             n for n in map(Node, nodes)
             if not any(
@@ -25,6 +31,10 @@ class Revision(object):
             )
         ]
 
+    def transform_branch(self, branchtool):
+        self.branch, branch_regex = branchtool.figure_branch(self)
+        if branch_regex:
+            branchtool.adapt_paths(self, branch_regex)
 
     def transform_renames(self):
         #XXX: tricky hack
