@@ -3,6 +3,7 @@ utility functions to read svn dumps into structured data
 """
 
 from io import BytesIO
+import itertools
 
 def headerkv(text):
     key, value = text.split(':', 1)
@@ -53,6 +54,13 @@ def read_entry(fd):
     return headers
 
 
+def walk_entries(fd):
+    while True:
+        try:
+            yield read_entry(fd)
+        except ValueError:
+            return
+
 class Revision(object):
     filters = [
             lambda x: x=={'data': '', 'props': {}},
@@ -102,12 +110,20 @@ class Revision(object):
             read_header(fd) # dump version
             read_header(fd) # dump uuid
 
-        while True:
-            try:
-                rev = cls.from_fd(fd)
-                # only actual commits with file data
-                if rev.nodes:
-                    yield rev
-            except ValueError:
-                break
+        revgrouped = itertools.groupby(
+                walk_entries(fd),
+                lambda entry: entry.get('Revision-number'))
+        rev = None
+        for key, group in revgrouped:
+            group = list(group)
+            if key is not None:
+                if rev is not None:
+                    yield cls(rev, [])
+                rev = group[0]
+            else:
+                yield cls(rev, group)
+                rev = None
+        if rev is not None:
+            yield cls(rev, [])
+
 
