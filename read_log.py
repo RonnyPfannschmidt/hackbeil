@@ -10,7 +10,7 @@ ignore_paths = [
     'codespeak',
     'xpython',
     'trunk/www',
-    'pypy/trunk/www/moininstance',
+    'pypy/trunk/www/',
     'vpath',
     'rlcompleter2',
     'epoz',
@@ -18,7 +18,16 @@ ignore_paths = [
     'z3',
     'user',
     'rr',
-    'basil'
+    'basil',
+    'std',
+    'py/',
+    'lxml',
+]
+
+
+include_paths = [
+    'pypy',
+    'trunk',
 ]
 
 
