@@ -6,6 +6,7 @@ some convience classes for storing the data from a replay/dump
 
 class BranchTool(object):
     branch_matches = [
+        #XXX: defaults?
     ]
 
     def figure_branch(self, revision):
