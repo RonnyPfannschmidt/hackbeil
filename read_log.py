@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import sys
-from svn_dump_reader import read_header, read_entry, Revision
+from svn_dump_reader import iter_file
+from model import Revision
 
 
 ignore_paths = [
@@ -22,27 +23,24 @@ ignore_paths = [
 
 
 def path_filter(node):
-    path = node['Node-path']
-    return any(path.startswith(x) for x in ignore_paths)
-
-def change_filter(node):
-    return node['Node-action'] == 'change'
+    return any(node.path.startswith(x) for x in ignore_paths)
 
 class InterestingRevision(Revision):
-    filters = Revision.filters + [path_filter]
+    filters = [path_filter]
 
 
 dump = open(sys.argv[1], 'r')
-for revision in InterestingRevision.iter_file(dump):
-    if not any('Node-copyfrom-path' in node for node in revision.nodes):
+for revision in iter_file(dump, InterestingRevision):
+    if not any(node.copy_from for node in revision.nodes):
         continue
+    
     print 'rev %s:'% revision.id
     print '  author:', revision.author
     print '  log:', revision.message.split('\n')[0]
     print '  files:'
-
+    revision.transform_renames()
     for node in revision.nodes:
-        print '    -', node['Node-action'], node.get('Node-kind', ''), node['Node-path']
-        if 'Node-copyfrom-path' in node:
-            print '        from', node['Node-copyfrom-path'], node["Node-copyfrom-rev"]
+        print '    -', node.action, node.path, node.kind or ''
+        if node.copy_from:
+            print '        from', node.copy_from, node.copy_rev
 

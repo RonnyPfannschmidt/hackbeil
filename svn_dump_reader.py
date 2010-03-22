@@ -65,67 +65,26 @@ def walk_entries(fd):
         except ValueError:
             return
 
-class Revision(object):
-    filters = []
-    def __init__(self, entry, nodes=()):
-        self.entry = entry
-        self.nodes = [
-            n for n in nodes
-            if not any(
-                f(n)
-                for f in self.filters
-            )
-        ]
+def iter_file(fd, cls, discard_header=True):
+    if discard_header:
+        read_header(fd) # dump version
+        read_header(fd) # dump uuid
 
-    def __repr__(self):
-        return '<Rev %s, nodes=%s>' % (self.id, len(self.nodes))
+    revgrouped = itertools.groupby(
+            walk_entries(fd),
+            lambda entry: entry.get('Revision-number'))
+    rev = None
+    for key, group in revgrouped:
+        group = list(group)
+        if key is not None:
+            if rev is not None:
+                yield cls(rev, [])
+            rev = group[0]
+        else:
+            yield cls(rev, group)
+            rev = None
+    if rev is not None:
+        yield cls(rev, [])
 
-    @property
-    def id(self):
-        return int(self.entry['Revision-number'])
-
-    @property
-    def message(self):
-        return self.entry['props'].get('svn:log') or '\n'
-
-    @property
-    def author(self):
-        return self.entry['props'].get('svn:author') or '\n'
-
-    @classmethod
-    def from_fd(cls, fd):
-
-        nodes = []
-
-        for entry in iter(lambda: read_entry(fd), None):
-            if 'Revision-number' in entry:
-                break
-            else:
-                nodes.append(entry)
-
-
-        return cls(entry, nodes)
-
-    @classmethod
-    def iter_file(cls, fd, discard_header=True):
-        if discard_header:
-            read_header(fd) # dump version
-            read_header(fd) # dump uuid
-
-        revgrouped = itertools.groupby(
-                walk_entries(fd),
-                lambda entry: entry.get('Revision-number'))
-        rev = None
-        for key, group in revgrouped:
-            group = list(group)
-            if key is not None:
-                if rev is not None:
-                    yield cls(rev, [])
-                rev = group[0]
-            else:
-                yield cls(rev, group)
-                rev = None
-        if rev is not None:
-            yield cls(rev, [])
 
 
