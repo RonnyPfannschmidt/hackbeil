@@ -16,6 +16,7 @@ ignore_paths = [
     'z3',
     'user',
     'rr',
+    'basil'
 ]
 
 
@@ -33,13 +34,15 @@ class InterestingRevision(Revision):
 
 dump = open(sys.argv[1], 'r')
 for revision in InterestingRevision.iter_file(dump):
+    if not any('Node-copyfrom-path' in node for node in revision.nodes):
+        continue
     print 'rev %s:'% revision.id
     print '  author:', revision.author
     print '  log:', revision.message.split('\n')[0]
     print '  files:'
 
     for node in revision.nodes:
-        print '    -', node['Node-action'], node['Node-path']
+        print '    -', node['Node-action'], node.get('Node-kind', ''), node['Node-path']
         if 'Node-copyfrom-path' in node:
             print '        from', node['Node-copyfrom-path'], node["Node-copyfrom-rev"]
 
