@@ -53,7 +53,7 @@ def path_filter2(node):
 
 
 class InterestingRevision(Revision):
-    filters = [path_filter2]
+    filters = [path_filter, path_filter2]
 
 
 
