@@ -1,7 +1,7 @@
 '''
 some convience classes for storing the data from a replay/dump
 '''
-
+import re
 
 
 class BranchTool(object):
