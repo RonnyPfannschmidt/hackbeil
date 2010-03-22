@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import sys
 import re
+import itertools
 from svn_dump_reader import iter_file
 from model import Revision, BranchTool
 
@@ -47,10 +48,13 @@ branchtool = PyPyBranchTool()
 def path_filter(node):
     return any(node.path.startswith(x) for x in ignore_paths)
 
+def path_filter2(node):
+    return not any(node.path.startswith(x) for x in include_paths)
 
 
 class InterestingRevision(Revision):
-    filters = [path_filter]
+    filters = [path_filter2]
+
 
 
 dump = open(sys.argv[1], 'r')
@@ -60,9 +64,7 @@ for revision in iter_file(dump, InterestingRevision):
         continue
     revision.transform_renames()
     revision.transform_branch(branchtool)
-    if not any(node.copy_from for node in revision.nodes):
-        continue
-    
+
     print 'rev %s:'% revision.id
     print '  branch:', revision.branch or 'default'
     print '  author:', revision.author
