@@ -39,28 +39,6 @@ class PyPyBranchTool(BranchTool):
         '^pypy/(?P<branch>dist)'
     ]
 
-    def figure_branch(self, revision):
-        for matcher in self.branch_matches:
-            for node in revision.nodes:
-                match = re.match(matcher, node.path)
-                if match is None:
-                    break
-                branch = match.groupdict().get('branch', '')
-            else:
-                return branch, matcher
-
-        return None, None
-
-    def adapt_paths(self, revision, regex):
-        if not regex:
-            return
-        for node in revision.nodes:
-            match = re.match(regex, node.path)
-            node.path = node.path[match.end():]
-            if node.copy_from:
-                match = re.match(regex, node.copy_from)
-                if match:
-                    node.copy_from = node.copy_from[match.end():]
 
 
 branchtool = PyPyBranchTool()
