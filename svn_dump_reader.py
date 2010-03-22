@@ -57,14 +57,16 @@ def read_entry(fd):
 def walk_entries(fd):
     while True:
         try:
-            yield read_entry(fd)
+            entry = read_entry(fd)
+            #XXX: why are those
+            if entry != {'data': '', 'props': {}}:
+                yield entry
+
         except ValueError:
             return
 
 class Revision(object):
-    filters = [
-            lambda x: x=={'data': '', 'props': {}},
-            ]
+    filters = []
     def __init__(self, entry, nodes=()):
         self.entry = entry
         self.nodes = [
