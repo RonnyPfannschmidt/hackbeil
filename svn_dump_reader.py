@@ -63,7 +63,7 @@ def walk_entries(fd):
                 yield entry
 
         except ValueError:
-            return
+            break
 
 def iter_file(fd, cls, discard_header=True):
     if discard_header:
