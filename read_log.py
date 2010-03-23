@@ -58,10 +58,11 @@ class InterestingRevision(Revision):
 
 
 dump = open(sys.argv[1], 'r')
+revisions = iter_file(dump, InterestingRevision)
+revisions = itertools.ifilter((lambda x: x.nodes), revisions)
+revisions = itertools.takewhile(lambda x: x.id < 400, revisions)
 
-for revision in iter_file(dump, InterestingRevision):
-    if not revision.nodes:
-        continue
+for revision in revisions:
     revision.transform_renames()
     revision.transform_branch(branchtool)
 
