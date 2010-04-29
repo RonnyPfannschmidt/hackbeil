@@ -60,9 +60,11 @@ class InterestingRevision(Revision):
 def print_rev(revision):
     revision.transform_renames()
     revision.transform_branch(branchtool)
-
+    if not any(node.copy_from for node in revision.nodes):
+        return
     print 'rev %s:'% revision.id
     print '  branch:', revision.branch or 'default'
+    print '  branchop:', branchtool.is_branchop(revision)
     print '  author:', revision.author
     print '  log:', revision.message.split('\n')[0]
     print '  files:'
