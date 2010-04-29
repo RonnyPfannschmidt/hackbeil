@@ -32,6 +32,15 @@ class BranchTool(object):
                 if match:
                     node.copy_from = node.copy_from[match.end():]
 
+    def is_branchop(self, revision):
+        """ use after adapt_paths"""
+        copy_from_base = any(n.copy_from == '' for n in revision.nodes)
+        return copy_from_base
+
+    def changes_only(self, revision):
+        return all(node.kind == 'change' for node in revision.nodes)
+
+
 class Node(object):
     def __init__(self, node):
         self.kind = node.get('Node-kind')
