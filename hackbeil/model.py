@@ -99,3 +99,5 @@ class Revision(object):
         return self.entry['props'].get('svn:author') or '\n'
 
 
+
+
