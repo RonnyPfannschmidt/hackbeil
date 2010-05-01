@@ -1,0 +1,15 @@
+revrange: # for testing analysis
+  start: 0
+  end: 400
+
+
+include:
+- pypy
+- trunk
+
+branchmatch:
+- ^(pypy/)?trunk
+- ^pypy/branch/(?P<branch>[^/]+)
+- ^pypy/(?P<branch>dist)
+
+

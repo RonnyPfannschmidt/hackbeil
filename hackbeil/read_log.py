@@ -80,8 +80,8 @@ def filter_range(revisions, start=0, end=999999999999999):
     revisions = itertools.dropwhile(lambda x: x.id < start, revisions)
     return itertools.takewhile(lambda x: x.id <= end, revisions)
 
-def main(start, end):
-    dump = open(sys.argv[1], 'r')
+def main(start, end, dump):
+    dump = open(dump, 'r')
     revisions = iter_file(dump, InterestingRevision)
     revisions = filter_nonodes(revisions)
     revisions = filter_range(revisions, start, end)
@@ -89,4 +89,4 @@ def main(start, end):
         print_rev(revision)
 
 if __name__ == '__main__':
-    main(0, 400)
+    main(0, 400, sys.argv[1])
