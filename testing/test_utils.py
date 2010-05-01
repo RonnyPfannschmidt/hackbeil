@@ -1,5 +1,7 @@
 import py
-from utils import window
+
+from hackbeil.utils import window
+
 def test_window():
 
     w = window(range(10), 6)
