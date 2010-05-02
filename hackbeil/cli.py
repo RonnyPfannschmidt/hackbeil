@@ -2,8 +2,13 @@ import yaml
 import functools
 import itertools
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 from .model import Revision, BranchTool
-from .svn_dump_reader import iter_file
+from .svn_dump_reader import iter_file, walk_entries
 
 filter_nonodes = functools.partial(itertools.ifilter, lambda x: x.nodes)
 
@@ -58,4 +63,24 @@ def print_rev(revision, branchtool):
         if node.copy_from:
             print '        from', node.copy_from, node.copy_rev
 
+
+def check_entry(config, entry):
+    return 1
+
+
+def convert_dump_to_pickle(configfile, dump, picklefile):
+    with open(configfile) as fp:
+        config = yaml.load(fp)
+    
+    dump = open(dump, 'r')
+    picklefile = open(picklefile, 'w')
+    try:
+        for entry in walk_entries(dump):
+            if check_entry(config, entry):
+                pickle.dump(entry, picklefile, protocol=2)
+            if 'revno' in entry:
+                print 'at revision', entry['revno']
+    finally:
+        picklefile.close()
+        dump.close()
 

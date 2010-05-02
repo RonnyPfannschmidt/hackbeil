@@ -2,7 +2,7 @@
 
 import sys
 
-if len(sys.argv)!=3:
+if len(sys.argv) != 3:
     print 'Usage:', sys.argv[0], '$config $dump'
     exit(1)
 
