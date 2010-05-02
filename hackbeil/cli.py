@@ -65,7 +65,18 @@ def print_rev(revision, branchtool):
 
 
 def check_entry(config, entry):
-    return 1
+    if 'path' not in entry:
+        return True
+
+    path = entry['path']
+
+    if any(path.startswith(x) for x in config.get('exclude')):
+        return False
+    if not any(path.startswith(x) for x in config.get('include')):
+        return True
+
+
+
 
 
 def convert_dump_to_pickle(configfile, dump, picklefile):
