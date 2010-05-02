@@ -52,12 +52,12 @@ def print_rev(revision, branchtool):
     revision.transform_branch(branchtool)
     if not any(node.copy_from for node in revision.nodes):
         return
-    print 'rev %s:'% revision.id
-    print '  branch:', revision.branch or 'default'
-    print '  branchop:', branchtool.is_branchop(revision)
-    print '  author:', revision.author
-    print '  log:', revision.message.split('\n')[0]
-    print '  files:'
+    print 'rev %s'% revision.id
+    print '  branch', revision.branch or 'default'
+    print '  branchop', branchtool.is_branchop(revision)
+    print '  author', revision.author
+    print '  log', revision.message.split('\n')[0]
+    print '  files'
     for node in revision.nodes:
         print '    -', node.action, node.path, node.kind or ''
         if node.copy_from:
