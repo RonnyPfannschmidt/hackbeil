@@ -4,6 +4,21 @@ utility functions to read svn dumps into structured data
 
 from io import BytesIO
 import itertools
+import hashlib
+
+key_names = {
+    'Revision-number': 'revno',
+    'Node-path': 'path',
+    'Node-kind': 'kind',
+    'Node-action': 'action',
+    'Node-copyfrom-path': 'copy_from',
+    'Node-copyfrom-rev': 'copy_rev',
+    'Prop-content-length': 'props_size',
+    'Content-length': delattr,
+    'Text-content-length': 'content_size',
+    'Text-content-md5': delattr,
+    'Text-content-sha1': 'content_sha1',
+}
 
 def headerkv(text):
     key, value = text.split(':', 1)
@@ -14,7 +29,13 @@ def headerkv(text):
 
 
 def read_header(fd):
-    return dict(map(headerkv, iter(fd.readline, '\n')))
+    result = {}
+    for key, value in map(headerkv, iter(fd.readline, '\n')):
+        key = key_names.get(key, key)
+        if key is delattr:
+            continue
+        result[key] = value
+    return result
 
 
 def read_props_inner(fd):
@@ -36,21 +57,21 @@ def read_props_inner(fd):
 
 def read_props(fd, pl):
     if not pl:
-        return
+        return []
     raw = fd.read(pl)
     return read_props_inner(BytesIO(raw))
 
 
 def read_entry(fd):
     headers = read_header(fd)
-    cl = headers.get('Content-length', 0)
-    pl = headers.get('Prop-content-length', 0)
-    props = dict(read_props(fd, pl) or [])
-    data = fd.read(cl-pl)
-    headers.update({
-        'props': props,
-        'data': data,
-        })
+    props = dict(read_props(fd, headers.get('props_size', 0)))
+    data = fd.read(headers.get('content_size', 0))
+    if 'content_sha1' in headers:
+        content_hash = hashlib.sha1(data).hexdigest()
+        assert content_hash == headers['content_sha1']
+    headers.update(props)
+    if data:
+        headers['data'] = data
     return headers
 
 
@@ -58,8 +79,8 @@ def walk_entries(fd):
     while True:
         try:
             entry = read_entry(fd)
-            #XXX: why are those
-            if entry != {'data': '', 'props': {}}:
+            #XXX: why are those empty ones there
+            if entry:
                 yield entry
 
         except ValueError:
@@ -72,7 +93,7 @@ def iter_file(fd, cls, discard_header=True):
 
     revgrouped = itertools.groupby(
             walk_entries(fd),
-            lambda entry: entry.get('Revision-number'))
+            lambda entry: entry.get('revno'))
     rev = None
     for key, group in revgrouped:
         group = list(group)
