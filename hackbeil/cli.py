@@ -69,20 +69,17 @@ def check_entry(config, entry):
         return True
 
     path = entry['path']
-
+    #XXX: copy_from !
     if any(path.startswith(x) for x in config.get('exclude')):
         return False
     if not any(path.startswith(x) for x in config.get('include')):
         return True
 
 
-
-
-
 def convert_dump_to_pickle(configfile, dump, picklefile):
     with open(configfile) as fp:
         config = yaml.load(fp)
-    
+
     dump = open(dump, 'r')
     picklefile = open(picklefile, 'w')
     try:
