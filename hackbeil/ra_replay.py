@@ -75,7 +75,7 @@ class MyEditor(object):
         return MyDirEditor()
 
 
-conn = RemoteAccess("file:///home/ronny/pypy-clone",
+conn = RemoteAccess("file:///home/ronny/.local/var/pypy-clone",
         auth=Auth([get_username_provider()]))
 def op(rev, props):
     return MyEditor(rev, props)
