@@ -1,4 +1,4 @@
-import yaml
+import iniconfig
 import functools
 import itertools
 
@@ -18,26 +18,29 @@ def filter_range(revisions, start=0, end=999999999999999):
     return itertools.takewhile(lambda x: x.id <= end, revisions)
 
 def read_dump(configfile, dump):
-    with open(configfile) as fp:
-        config = yaml.load(fp)
-    
+    config = iniconfig.IniConfig(configfile)
 
-    start = config['revrange']['start']
-    end = config['revrange']['end']
-
+    start = config.get('range', 'start', convert=int)
+    end = config.get('range', 'end', convert=int)
+    print start, end
     dump = open(dump, 'r')
     
     branchtool = BranchTool()
-    BranchTool.branch_matches = config['branchmatch']
+    BranchTool.branch_matches = config.get('branches', 'match',
+                                        convert=str.splitlines)
 
-
+    include = config.get('paths', 'include', convert=str.splitlines)
+    exclude = config.get('paths', 'exclude',
+                         convert=str.split,
+                         default=[],
+                        )
 
     class InterestingRevision(Revision):
         filters = [
             lambda node: not any(node.path.startswith(x)
-                                 for x in config['include']),
+                                 for x in include),
             lambda node: any(node.path.startswith(x)
-                             for x in config.get('exclude', [])),
+                             for x in exclude),
             ]
 
 
@@ -52,12 +55,12 @@ def print_rev(revision, branchtool):
     revision.transform_branch(branchtool)
     if not any(node.copy_from for node in revision.nodes):
         return
-    print 'rev %s'% revision.id
-    print '  branch', revision.branch or 'default'
-    print '  branchop', branchtool.is_branchop(revision)
-    print '  author', revision.author
-    print '  log', revision.message.split('\n')[0]
-    print '  files'
+    print '- rev: %s'% revision.id
+    print '  branch:', revision.branch or 'default'
+    print '  branchop:', branchtool.is_branchop(revision)
+    print '  author:', revision.author
+    print '  log:', revision.message.split('\n')[0]
+    print '  files:'
     for node in revision.nodes:
         print '    -', node.action, node.path, node.kind or ''
         if node.copy_from:
@@ -77,8 +80,6 @@ def check_entry(config, entry):
 
 
 def convert_dump_to_pickle(configfile, dump, picklefile):
-    with open(configfile) as fp:
-        config = yaml.load(fp)
 
     dump = open(dump, 'r')
     picklefile = open(picklefile, 'w')
