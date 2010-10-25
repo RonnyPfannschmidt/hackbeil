@@ -24,7 +24,7 @@ template = (
 )
 
 
-for stitch, (path, start, end) in enumerate(calls):
+for stitch, (path, start, end) in enumerate(reversed(calls)):
     if end:
         end = int(end)-1
     command = template.format(
@@ -32,6 +32,7 @@ for stitch, (path, start, end) in enumerate(calls):
         path=path,
         start=start,
         ends=' -r %s' % end if end else '')
-    print command
+    print command, '&&'
 
+print 'echo weeeeeeeeee'
 
