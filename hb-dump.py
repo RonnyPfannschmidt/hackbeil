@@ -1,12 +1,21 @@
 #!/usr/bin/python
 
-import sys
+import argparse
+parser = argparse.ArgumentParser()
 
-if len(sys.argv) != 3:
-    print 'Usage:', sys.argv[0], '$config $dump'
-    exit(1)
-
+parser.add_argument('config')
+parser.add_argument('dump')
 
 from hackbeil.cli import read_dump
-read_dump(sys.argv[1], sys.argv[2])
+from hackbeil.svn_dump_reader import walk_entries
+
+options = parser.parse_args()
+
+walk_iter = walk_entries(
+    open(options.dump),
+    discard_header=True)
+
+read_dump(options.config, walk_iter)
+
+
 
