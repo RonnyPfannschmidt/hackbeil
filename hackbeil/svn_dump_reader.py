@@ -75,7 +75,10 @@ def read_entry(fd):
     return headers
 
 
-def walk_entries(fd):
+def walk_entries(fd, discard_header=True):
+    if discard_header:
+        read_header(fd) # dump version
+        read_header(fd) # dump uuid
     while True:
         try:
             entry = read_entry(fd)
@@ -86,26 +89,6 @@ def walk_entries(fd):
         except ValueError:
             break
 
-def iter_file(fd, cls, discard_header=True):
-    if discard_header:
-        read_header(fd) # dump version
-        read_header(fd) # dump uuid
-
-    revgrouped = itertools.groupby(
-            walk_entries(fd),
-            lambda entry: entry.get('revno'))
-    rev = None
-    for key, group in revgrouped:
-        group = list(group)
-        if key is not None:
-            if rev is not None:
-                yield cls(rev, [])
-            rev = group[0]
-        else:
-            yield cls(rev, group)
-            rev = None
-    if rev is not None:
-        yield cls(rev, [])
 
 
 

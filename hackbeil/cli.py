@@ -8,7 +8,7 @@ except ImportError:
     import pickle
 
 from .model import Revision, BranchTool
-from .svn_dump_reader import iter_file, walk_entries
+from .svn_dump_reader import walk_entries
 
 filter_nonodes = functools.partial(itertools.ifilter, lambda x: x.nodes)
 
@@ -16,6 +16,24 @@ def filter_range(revisions, start=0, end=999999999999999):
     assert start < end
     revisions = itertools.dropwhile(lambda x: x.id < start, revisions)
     return itertools.takewhile(lambda x: x.id <= end, revisions)
+
+def iter_entries(walk_iter, cls):
+
+    revgrouped = itertools.groupby(
+            walk_iter,
+            lambda entry: entry.get('revno'))
+    rev = None
+    for key, group in revgrouped:
+        group = list(group)
+        if key is not None:
+            if rev is not None:
+                yield cls(rev, [])
+            rev = group[0]
+        else:
+            yield cls(rev, group)
+            rev = None
+    if rev is not None:
+        yield cls(rev, [])
 
 def read_dump(configfile, dump):
     config = iniconfig.IniConfig(configfile)
@@ -44,7 +62,8 @@ def read_dump(configfile, dump):
             ]
 
 
-    revisions = iter_file(dump, InterestingRevision)
+    walk_iter = walk_entries(dump, discard_header=True)
+    revisions = iter_entries(walk_iter, InterestingRevision)
     revisions = filter_nonodes(revisions)
     revisions = filter_range(revisions, start, end)
     for revision in revisions:
