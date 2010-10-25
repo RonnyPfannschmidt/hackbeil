@@ -34,8 +34,11 @@ class BranchTool(object):
 
     def is_branchop(self, revision):
         """ use after adapt_paths"""
-        copy_from_base = any(n.copy_from == '' for n in revision.nodes)
-        return copy_from_base
+        if not revision.nodes:
+            return
+
+        indicator = revision.nodes[0]
+        return not indicator.path and bool(indicator.copy_from)
 
     def changes_only(self, revision):
         return all(node.kind == 'change' for node in revision.nodes)
