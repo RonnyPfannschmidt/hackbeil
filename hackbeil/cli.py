@@ -70,6 +70,8 @@ def print_rev(revision, branchtool):
     revision.transform_branch(branchtool)
     if not any(node.copy_from for node in revision.nodes):
         return
+    if not branchtool.is_branchop(revision):
+        return
     print '- rev: %s'% revision.id
     print '  branch:', revision.branch or 'default'
     print '  branchop:', branchtool.is_branchop(revision)
@@ -80,6 +82,7 @@ def print_rev(revision, branchtool):
         print '    -', node.action, node.path, node.kind or ''
         if node.copy_from:
             print '        from', node.copy_from, node.copy_rev
+    print
 
 
 def check_entry(config, entry):
