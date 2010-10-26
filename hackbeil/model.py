@@ -68,9 +68,9 @@ class Revision(object):
         ]
 
     def transform_branch(self, branchtool):
-        self.branch, branch_regex = branchtool.figure_branch(self)
-        if branch_regex:
-            branchtool.adapt_paths(self, branch_regex)
+        self.branch, self.branch_regex = branchtool.figure_branch(self)
+        if self.branch_regex:
+            branchtool.adapt_paths(self, self.branch_regex)
 
     def transform_renames(self):
         #XXX: tricky hack

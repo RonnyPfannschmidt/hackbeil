@@ -73,6 +73,7 @@ def print_rev(revision, branchtool):
         return
     print '- rev: %s'% revision.id
     print '  branch:', revision.branch or 'default'
+    print '  branch match:', revision.branch_regex
     print '  branchop:', branchtool.is_branchop(revision)
     print '  author:', revision.author
     print '  log:', revision.message.split('\n')[0]
