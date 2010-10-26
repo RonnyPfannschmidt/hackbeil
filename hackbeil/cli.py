@@ -62,7 +62,7 @@ def read_dump(configfile, walk_iter):
     revisions = iter_entries(walk_iter, InterestingRevision)
     revisions = filter_nonodes(revisions)
     revisions = filter_range(revisions, start, end)
-    return revisions
+    return revisions, branchtool
 
 def print_rev(revision, branchtool):
     revision.transform_renames()
