@@ -84,7 +84,7 @@ try:
     nextnode = target_repo.commitctx(memctx)
 except Exception, e:
     print e
-    tr.close()
+    tr.abort()
     raise
 
 
@@ -115,7 +115,7 @@ for index, commit in enumerate(stitch_source):
         nextnode = target_repo.commitctx(memctx)
     except Exception, e:
         print e
-        tr.close()
+        tr.abort()
         raise
 
 else:
