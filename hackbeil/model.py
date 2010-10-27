@@ -26,6 +26,7 @@ class BranchTool(object):
             return
         for node in revision.nodes:
             match = re.match(regex, node.path)
+            revision.base = node.path[:match.end()]
             node.path = node.path[match.end():]
             if node.copy_from:
                 match = re.match(regex, node.copy_from)
@@ -35,7 +36,7 @@ class BranchTool(object):
     def is_branchop(self, revision):
         """ use after adapt_paths"""
         if not revision.nodes:
-            return
+            return getattr(revision, 'branch_regex', None)
 
         indicator = revision.nodes[0]
         return not indicator.path and bool(indicator.copy_from)
@@ -71,6 +72,12 @@ class Revision(object):
         self.branch, self.branch_regex = branchtool.figure_branch(self)
         if self.branch_regex:
             branchtool.adapt_paths(self, self.branch_regex)
+
+        probable_base_node = self.nodes[0]
+        if probable_base_node.copy_from:
+            self.source = probable_base_node.copy_from
+            self.source_rev = probable_base_node.copy_rev
+            self.branchop = probable_base_node.action
 
     def transform_renames(self):
         #XXX: tricky hack
