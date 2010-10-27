@@ -35,7 +35,7 @@ changed = set(
     if current[name].data() != stitch_root[name].data()
 )
 
-ui.status('added %s removed %s changed %s common %s\n' % (
+ui.status('added %s removed %s changed %s common %s\n\n' % (
     len(added),
     len(removed),
     len(changed),
@@ -61,7 +61,9 @@ def filectx(repo, ctx, path):
 
 
 
+ui.status('stitching initial revision\n')
 
+tr = target_repo.transaction('commit')
 
 base_extra = stitch_root.extra()
 if options.branch:
@@ -78,14 +80,44 @@ memctx = context.memctx(
     filectxfn = filectx,
 )
 
+try:
+    nextnode = target_repo.commitctx(memctx)
+except Exception, e:
+    print e
+    tr.close()
+    raise
 
-target_repo.commitctx(memctx)
 
+for index, commit in enumerate(stitch_source):
+    # we already took the first commit
+    if not index:
+        continue
+    ui.progress('stich rev', pos=index, total=len(stitch_source))
 
+    stitch_root = stitch_source[index]
 
-raise SystemExit
-#ui.progress('stich rev', pos=0, total=len(stitch_source))
-for i in range(20):
-    import time
-    time.sleep(0.1)
-    ui.progress('stich rev', pos=i, total=10)
+    base_extra = stitch_root.extra()
+    if options.branch:
+        base_extra['branch'] = options.branch
+
+    memctx = context.memctx(
+        repo=target_repo,
+        parents=[nextnode, None],
+        text=stitch_root.description(),
+        user=stitch_root.user(),
+        date=stitch_root.date(),
+        files=sorted(added|removed|changed),
+        extra=base_extra,
+        filectxfn = filectx,
+    )
+
+    try:
+        nextnode = target_repo.commitctx(memctx)
+    except Exception, e:
+        print e
+        tr.close()
+        raise
+
+else:
+    tr.close()
+    tr.release()
