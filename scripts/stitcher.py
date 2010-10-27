@@ -57,6 +57,7 @@ def filectx(repo, ctx, path):
         data=other.data(),
         islink='l' in other.flags(),
         isexec='x' in other.flags(),
+        copied = other.renamed(),
     )
 
 
