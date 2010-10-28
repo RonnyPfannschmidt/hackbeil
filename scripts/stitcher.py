@@ -2,6 +2,7 @@
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('source')
+parser.add_argument('--close', default=False, action='store_true')
 parser.add_argument('--import-as-branch', default=None)
 parser.add_argument('--source-branch', default='default')
 
@@ -15,7 +16,6 @@ import sys
 import errno
 
 options = parser.parse_args()
-
 
 from mercurial.ui import ui as Ui
 from mercurial import commands, hg, localrepo, context
@@ -125,8 +125,7 @@ memctx = context.memctx(
 
 try:
     nextnode = target_repo.commitctx(memctx)
-except Exception, e:
-    print e
+except:
     tr.abort()
     raise
 
@@ -156,11 +155,33 @@ for index, commit in enumerate(stitch_source):
 
     try:
         nextnode = target_repo.commitctx(memctx)
-    except Exception, e:
-        print e
+    except:
         tr.abort()
         raise
 
-else:
-    tr.close()
-    tr.release()
+if options.close:
+    ui.status('closing branch %s\n' % memctx.branch())
+    closectx = context.memctx(
+        repo=target_repo,
+        parents=[nextnode, None],
+        text='closed branch %s' % memctx.branch(),
+        user='sticher branch close',
+        date=stitch_root.date(),
+        files=[],
+        extra={
+            'branch': memctx.branch(),
+            'close': 1,
+        },
+        filectxfn = None,
+    )
+
+    try:
+        target_repo.commitctx(closectx)
+    except:
+        tr.abort()
+        raise
+
+
+tr.close()
+tr.release()
+ui.status('completed stitching of %s\n' % options.source)
