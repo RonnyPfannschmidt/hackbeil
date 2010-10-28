@@ -2,12 +2,12 @@
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('source')
-parser.add_argument('--branch', default=None)
-parser.add_argument('--target-branch', default='default')
+parser.add_argument('--import-as-branch', default=None)
+parser.add_argument('--source-branch', default='default')
 
 group = parser.add_mutually_exclusive_group()
-group.add_argument('--target-rev', default='tip')
-group.add_argument('--svn-target-rev', type=int)
+group.add_argument('--source-rev', default='tip')
+group.add_argument('--svn-source-rev', type=int)
 
 
 import hgext.progress
@@ -27,13 +27,13 @@ ui.status('opening repos\n')
 target_repo = localrepo.localrepository(ui, '.')
 stitch_source = localrepo.localrepository(ui, options.source)
 
-if options.svn_target_rev:
+if options.svn_source_rev:
     lastctx = None
     for idx, rev in enumerate(target_repo):
         ui.progress('finding svn target', pos=idx)
         ctx = target_repo[rev]
         branch = ctx.branch()
-        if branch != options.target_branch:
+        if branch != options.source_branch:
             continue
         extra = ctx.extra()
         crev = extra.get('convert_revision')
@@ -43,25 +43,25 @@ if options.svn_target_rev:
             else:
                 crev = crev.split(':')[-1] # from bzr
             crev = int(crev)
-            if crev > options.svn_target_rev:
+            if crev > options.svn_source_rev:
                 if lastctx is None:
                     # this happens when the first svn revision of the branch
-                    # is higher than the target svn revision. The sanest thing
+                    # is higher than the source svn revision. The sanest thing
                     # to do is to just abort.
-                    ui.status('The first SVN revision of the branch is %d, which is higher than %d\n' % (crev, options.svn_target_rev))
+                    ui.status('The first SVN revision of the branch is %d, which is higher than %d\n' % (crev, options.svn_source_rev))
                     sys.exit()
                 
-                options.target_rev=lastctx.rev()
+                options.source_rev=lastctx.rev()
                 break
         lastctx = ctx
     else:
         ui.status('no fitting svn commit found\nusing latest instead\n')
-        options.target_rev=ctx.rev()
+        options.source_rev=ctx.rev()
 
-current = target_repo[options.target_rev]
+current = target_repo[options.source_rev]
 ui.status('found %s:%s (%s)\n' % (current.rev(), current.hex(), current.extra().get('convert_revision')))
 
-ui.status('comparing first change and target parent\n')
+ui.status('comparing first change and source parent\n')
 
 stitch_root = stitch_source[0]
 new_files = set(stitch_root)
@@ -109,8 +109,8 @@ ui.status('stitching initial revision\n')
 tr = target_repo.transaction('commit')
 
 base_extra = stitch_root.extra()
-if options.branch:
-    base_extra['branch'] = options.branch
+if options.import_as_branch:
+    base_extra['branch'] = options.import_as_branch
 
 memctx = context.memctx(
     repo=target_repo,
@@ -140,8 +140,8 @@ for index, commit in enumerate(stitch_source):
     stitch_root = stitch_source[index]
 
     base_extra = stitch_root.extra()
-    if options.branch:
-        base_extra['branch'] = options.branch
+    if options.import_as_branch:
+        base_extra['branch'] = options.import_as_branch
 
     memctx = context.memctx(
         repo=target_repo,
