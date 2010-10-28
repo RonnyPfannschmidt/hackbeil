@@ -52,12 +52,13 @@ def filectx(repo, ctx, path):
         raise error
 
     other = stitch_root[path]
+    copy = other.renamed() and other.renamed()[0]
     return context.memfilectx(
         path=path,
         data=other.data(),
         islink='l' in other.flags(),
         isexec='x' in other.flags(),
-        copied = other.renamed(),
+        copied = copy,
     )
 
 
@@ -93,7 +94,7 @@ for index, commit in enumerate(stitch_source):
     # we already took the first commit
     if not index:
         continue
-    ui.progress('stich rev', pos=index, total=len(stitch_source))
+    ui.progress('stich rev', pos=index+1, total=len(stitch_source))
 
     stitch_root = stitch_source[index]
 
@@ -107,7 +108,7 @@ for index, commit in enumerate(stitch_source):
         text=stitch_root.description(),
         user=stitch_root.user(),
         date=stitch_root.date(),
-        files=sorted(added|removed|changed),
+        files=sorted(stitch_root.files()),
         extra=base_extra,
         filectxfn = filectx,
     )
