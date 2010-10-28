@@ -11,7 +11,7 @@ group.add_argument('--svn-target-rev', type=int)
 
 
 import hgext.progress
-
+import sys
 import errno
 
 options = parser.parse_args()
@@ -44,6 +44,13 @@ if options.svn_target_rev:
                 crev = crev.split(':')[-1] # from bzr
             crev = int(crev)
             if crev > options.svn_target_rev:
+                if lastctx is None:
+                    # this happens when the first svn revision of the branch
+                    # is higher than the target svn revision. The sanest thing
+                    # to do is to just abort.
+                    ui.status('The first SVN revision of the branch is %d, which is higher than %d\n' % (crev, options.svn_target_rev))
+                    sys.exit()
+                
                 options.target_rev=lastctx.rev()
                 break
         lastctx = ctx
@@ -52,8 +59,7 @@ if options.svn_target_rev:
         options.target_rev=ctx.rev()
 
 current = target_repo[options.target_rev]
-ui.status('found %s:%s\n' % (current.rev(), current.hex()))
-
+ui.status('found %s:%s (%s)\n' % (current.rev(), current.hex(), current.extra().get('convert_revision')))
 
 ui.status('comparing first change and target parent\n')
 
