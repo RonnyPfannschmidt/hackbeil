@@ -1,14 +1,21 @@
 #!/usr/bin/python
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('--branch', default=None)
-parser.add_argument('--target_rev', default='tip')
 parser.add_argument('source')
+parser.add_argument('--branch', default=None)
+parser.add_argument('--target-branch', default='default')
+
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--target-rev', default='tip')
+group.add_argument('--svn-target-rev', type=int)
+
+
 import hgext.progress
 
 import errno
 
 options = parser.parse_args()
+
 
 from mercurial.ui import ui as Ui
 from mercurial import commands, hg, localrepo, context
@@ -16,11 +23,39 @@ from mercurial import commands, hg, localrepo, context
 ui = Ui()
 hgext.progress.uisetup(ui)
 
+ui.status('opening repos\n')
 target_repo = localrepo.localrepository(ui, '.')
 stitch_source = localrepo.localrepository(ui, options.source)
 
-ui.status('comparing first change and target parent')
+if options.svn_target_rev:
+    lastctx = None
+    for idx, rev in enumerate(target_repo):
+        ui.progress('finding svn target', pos=idx)
+        ctx = target_repo[rev]
+        branch = ctx.branch()
+        if branch != options.target_branch:
+            continue
+        extra = ctx.extra()
+        crev = extra.get('convert_revision')
+        if crev:
+            if '@' in crev:
+                crev = crev.split('@')[-1] #from hg
+            else:
+                crev = crev.split(':')[-1] # from bzr
+            crev = int(crev)
+            if crev > options.svn_target_rev:
+                options.target_rev=lastctx.rev()
+                break
+        lastctx = ctx
+    else:
+        ui.status('no fitting svn commit found\nusing latest instead\n')
+        options.target_rev=ctx.rev()
+
 current = target_repo[options.target_rev]
+ui.status('found %s:%s\n' % (current.rev(), current.hex()))
+
+
+ui.status('comparing first change and target parent\n')
 
 stitch_root = stitch_source[0]
 new_files = set(stitch_root)
