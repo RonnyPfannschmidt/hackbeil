@@ -48,7 +48,7 @@ for line in input:
         if base not in ['pypy', 'pypy/branch', 'pypy/release']:
             continue
 
-        if base == 'pypy' and name in ['trunk', 'branch', 'tag', 'django', 'www']:
+        if base == 'pypy' and name in ['branch', 'tag', 'django', 'www']:
             continue
 
     if 'revno'in data:
