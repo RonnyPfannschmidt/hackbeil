@@ -28,35 +28,11 @@ target_repo = localrepo.localrepository(ui, '.')
 stitch_source = localrepo.localrepository(ui, options.source)
 
 if options.svn_source_rev:
-    lastctx = None
-    for idx, rev in enumerate(target_repo):
-        ui.progress('finding svn target', pos=idx)
-        ctx = target_repo[rev]
-        branch = ctx.branch()
-        if branch != options.source_branch:
-            continue
-        extra = ctx.extra()
-        crev = extra.get('convert_revision')
-        if crev:
-            if '@' in crev:
-                crev = crev.split('@')[-1] #from hg
-            else:
-                crev = crev.split(':')[-1] # from bzr
-            crev = int(crev)
-            if crev > options.svn_source_rev:
-                if lastctx is None:
-                    # this happens when the first svn revision of the branch
-                    # is higher than the source svn revision. The sanest thing
-                    # to do is to just abort.
-                    ui.status('The first SVN revision of the branch is %d, which is higher than %d\n' % (crev, options.svn_source_rev))
-                    sys.exit()
-                
-                options.source_rev=lastctx.rev()
-                break
-        lastctx = ctx
-    else:
-        ui.status('no fitting svn commit found\nusing latest instead\n')
-        options.source_rev=ctx.rev()
+    options.source_rev = find_svn_rev(
+        repo=target_repo,
+        wanted_branch=options.source_branch,
+        wanted_rev=options.svn_source_rev,
+    )
 
 current = target_repo[options.source_rev]
 ui.status('found %s:%s (%s)\n' % (current.rev(), current.hex(), current.extra().get('convert_revision')))
