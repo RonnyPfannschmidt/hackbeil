@@ -39,16 +39,14 @@ def guess_newtrunk(commit):
                 copy_from = action['copy_from']
                 if action['path'] != trunk:
                     copy_from += trunk[trunk.rindex('/'):]
-                copy = '%s@%s' %(copy_from, action['copy_rev'])
-                print commit['revno'], 'add', trunk, 'from', copy
+                copy = '%s:%s' %(copy_from, action['copy_rev'])
+                print  '/%s (from /%s) r%s' %(trunk, copy, commit['revno'])
                 moves.append(commit)
                 return copy_from
         import posixpath
     return trunk
 
+print '# new_trunk (from copy_source:rev) commit'
 for commit in commits:
     trunk = guess_newtrunk(commit)
 
-
-import pprint
-pprint.pprint(moves)
