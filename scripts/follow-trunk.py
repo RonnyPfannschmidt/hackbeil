@@ -23,7 +23,7 @@ commits = commits[::-1]
 
 
 trunk = 'pypy/trunk'
-
+moves = []
 
 
 def guess_newtrunk(commit):
@@ -41,6 +41,7 @@ def guess_newtrunk(commit):
                     copy_from += trunk[trunk.rindex('/'):]
 
                 print commit['revno'], 'new trunk ', copy_from
+                moves.append(commit)
                 return copy_from
         import posixpath
     return trunk
@@ -50,4 +51,4 @@ for commit in commits:
 
 
 import pprint
-#pprint.pprint(commits)
+pprint.pprint(moves)
