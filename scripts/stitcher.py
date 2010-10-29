@@ -13,13 +13,9 @@ group.add_argument('--svn-source-rev', type=int)
 
 from hackbeil import hgutils # import progressui, find_svn_rev, copying_fctxfn
 
-import hgext.progress
-import sys
-import errno
-
 options = parser.parse_args()
 
-from mercurial import commands, hg, localrepo, context
+from mercurial import localrepo
 
 ui = hgutils.progressui()
 
@@ -59,8 +55,6 @@ for index, commit in enumerate(stitch_source):
     ui.progress('stich rev', pos=index+1, total=len(stitch_source))
 
     stitch_root = stitch_source[index]
-
-
 
     with hgutils.abort_on_error(tr):
         nextnode = hgutils.replay_commit(
