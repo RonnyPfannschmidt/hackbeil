@@ -39,8 +39,8 @@ def guess_newtrunk(commit):
                 copy_from = action['copy_from']
                 if action['path'] != trunk:
                     copy_from += trunk[trunk.rindex('/'):]
-
-                print commit['revno'], 'new trunk ', copy_from
+                copy = '%s@%s' %(copy_from, action['copy_rev'])
+                print commit['revno'], 'add', trunk, 'from', copy
                 moves.append(commit)
                 return copy_from
         import posixpath
