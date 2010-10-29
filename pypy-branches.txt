@@ -1,4 +1,4 @@
-# branch from start end?
+# new_trunk (from copy_source:rev) commit
 /pypy/trunk (from /pypy/branch/newtrunk:67376) r67377
 /pypy/branch/newtrunk (from /pypy/branch/pyjitpl5:67353) r67354
 /pypy/branch/pyjitpl5 (from /pypy/branch/pyjitpl5-experiments:65735) r65738
