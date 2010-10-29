@@ -37,7 +37,7 @@ def find_svn_rev(repo, wanted_branch, wanted_rev):
             if '@' in convert_rev:
                 convert_rev = convert_rev.split('@')[-1] #from hg
             else:
-                convert_rev = crev.split(':')[-1] # from bzr
+                convert_rev = convert_rev.split(':')[-1] # from bzr
             convert_rev = int(convert_rev)
             if convert_rev > wanted_rev:
                 if lastctx is None:
