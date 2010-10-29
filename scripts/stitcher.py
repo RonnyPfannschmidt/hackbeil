@@ -37,7 +37,9 @@ else:
     source_rev = options.source_rev
 
 current = target_repo[source_rev]
-ui.status('found %s:%s (%s)\n' % (current.rev(), current.hex(), current.extra().get('convert_revision')))
+ui.status('found %s:%s (%s)\n' % (current.rev(),
+                                  current.hex(),
+                                  current.extra().get('convert_revision')))
 
 ui.status('comparing first change and source parent\n')
 
