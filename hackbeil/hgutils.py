@@ -17,7 +17,7 @@ def abort_on_error(transaction):
     except:
         transaction.abort()
         raise
-    finally:
+    else:
         transaction.close()
 
 
@@ -85,7 +85,7 @@ def close_commit(repo, lookup, date=None):
 
     ui.status('closing branch %s\n' % branch)
     closectx = context.memctx(
-        repo=target_repo,
+        repo=repo,
         parents=[ctx.rev(), None],
         text='closed branch %s' % branch,
         user='sticher branch closer',
