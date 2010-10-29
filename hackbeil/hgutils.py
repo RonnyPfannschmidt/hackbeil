@@ -1,4 +1,5 @@
 from mercurial.util import Abort
+from mercurial import context
 
 
 def progressui():
@@ -41,3 +42,29 @@ def find_svn_rev(repo, wanted_branch, wanted_rev):
     else:
         ui.status('no fitting svn commit found\nusing latest instead\n')
         return ctx.rev()
+
+
+
+def copying_fctxfn(stitch_root):
+
+    def filectx(repo, ctx, path):
+        if path not in stitch_root:
+            error = IOError()
+            #error.errno=errno.ENOENT
+            #error.filename=path
+            raise error
+
+        other = stitch_root[path]
+        copy = other.renamed() and other.renamed()[0]
+        return context.memfilectx(
+            path=path,
+            data=other.data(),
+            islink='l' in other.flags(),
+            isexec='x' in other.flags(),
+            copied = copy,
+        )
+    return filectx
+
+
+
+
