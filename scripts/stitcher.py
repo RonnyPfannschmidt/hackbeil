@@ -11,7 +11,7 @@ group.add_argument('--source-rev', default='tip')
 group.add_argument('--svn-source-rev', type=int)
 
 
-from hackbeil.hgutils import progressui, find_svn_rev, copying_fctxfn
+from hackbeil import hgutils # import progressui, find_svn_rev, copying_fctxfn
 
 import hgext.progress
 import sys
@@ -21,14 +21,14 @@ options = parser.parse_args()
 
 from mercurial import commands, hg, localrepo, context
 
-ui = progressui()
+ui = hgutils.progressui()
 
 ui.status('opening repos\n')
 target_repo = localrepo.localrepository(ui, '.')
 stitch_source = localrepo.localrepository(ui, options.source)
 
 if options.svn_source_rev:
-    source_rev = find_svn_rev(
+    source_rev = hgutils.find_svn_rev(
         repo=target_repo,
         wanted_branch=options.source_branch,
         wanted_rev=options.svn_source_rev,
@@ -82,14 +82,11 @@ memctx = context.memctx(
     date=stitch_root.date(),
     files=sorted(added|removed|changed),
     extra=base_extra,
-    filectxfn = copying_fctxfn(stitch_root),
+    filectxfn = hgutils.copying_fctxfn(stitch_root),
 )
 
-try:
+with hgutils.abort_on_error(tr):
     nextnode = target_repo.commitctx(memctx)
-except:
-    tr.abort()
-    raise
 
 
 for index, commit in enumerate(stitch_source):
@@ -112,38 +109,17 @@ for index, commit in enumerate(stitch_source):
         date=stitch_root.date(),
         files=sorted(stitch_root.files()),
         extra=base_extra,
-        filectxfn = copying_fctxfn(stitch_root),
+        filectxfn = hgutils.copying_fctxfn(stitch_root),
     )
 
-    try:
+    with hgutils.abort_on_error(tr):
         nextnode = target_repo.commitctx(memctx)
-    except:
-        tr.abort()
-        raise
 
 if options.close:
-    ui.status('closing branch %s\n' % memctx.branch())
-    closectx = context.memctx(
-        repo=target_repo,
-        parents=[nextnode, None],
-        text='closed branch %s' % memctx.branch(),
-        user='sticher branch close',
-        date=stitch_root.date(),
-        files=[],
-        extra={
-            'branch': memctx.branch(),
-            'close': 1,
-        },
-        filectxfn = None,
-    )
 
-    try:
-        target_repo.commitctx(closectx)
-    except:
-        tr.abort()
-        raise
+    with hgutils.abort_on_error(tr):
+        hgutils.close_commit(target_repo, nextnode)
 
 
 tr.close()
-tr.release()
 ui.status('completed stitching of %s\n' % options.source)

@@ -1,6 +1,6 @@
 from mercurial.util import Abort
 from mercurial import context
-
+import contextlib
 
 def progressui():
     from mercurial.ui import ui
@@ -9,7 +9,16 @@ def progressui():
     uisetup(ui)
     return ui
 
-
+@contextlib.contextmanager
+def abort_on_error(transaction):
+    transaction.nest()
+    try:
+        yield
+    except:
+        transaction.abort()
+        raise
+    finally:
+        transaction.close()
 
 
 def find_svn_rev(repo, wanted_branch, wanted_rev):
@@ -66,5 +75,27 @@ def copying_fctxfn(stitch_root):
     return filectx
 
 
+def close_commit(repo, lookup, date=None):
+    ui = repo.ui
+    ctx = repo[lookup]
 
+    if date is None:
+        date = ctx.date()
+    branch = ctx.branch()
 
+    ui.status('closing branch %s\n' % branch)
+    closectx = context.memctx(
+        repo=target_repo,
+        parents=[ctx.rev(), None],
+        text='closed branch %s' % branch,
+        user='sticher branch closer',
+        date=date,
+        files=[],
+        extra={
+            'branch': branch,
+            'close': 1,
+        },
+        filectxfn = None,
+    )
+
+    repo.commitctx(closectx)
