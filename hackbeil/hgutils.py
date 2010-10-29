@@ -148,3 +148,22 @@ def replay_a_initial_commit(repo, base, source, target_branch=None):
     return repo.commitctx(memctx)
 
 
+
+
+def replay_commit(repo, base, source_ctx, target_branch=None):
+
+    base_extra = source_ctx.extra()
+    if target_branch is not None:
+        base_extra['branch'] = target_branch
+
+    memctx = context.memctx(
+        repo=repo,
+        parents=[base, None],
+        text=source_ctx.description(),
+        user=source_ctx.user(),
+        date=source_ctx.date(),
+        files=sorted(source_ctx.files()),
+        extra=base_extra,
+        filectxfn = copying_fctxfn(source_ctx),
+    )
+    return repo.commitctx(memctx)

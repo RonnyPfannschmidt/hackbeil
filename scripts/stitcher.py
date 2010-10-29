@@ -49,6 +49,7 @@ with hgutils.abort_on_error(tr):
         repo=target_repo,
         base=source_rev,
         source=stitch_source,
+        target_branch=options.import_as_branch,
     )
 
 for index, commit in enumerate(stitch_source):
@@ -59,23 +60,15 @@ for index, commit in enumerate(stitch_source):
 
     stitch_root = stitch_source[index]
 
-    base_extra = stitch_root.extra()
-    if options.import_as_branch:
-        base_extra['branch'] = options.import_as_branch
 
-    memctx = context.memctx(
-        repo=target_repo,
-        parents=[nextnode, None],
-        text=stitch_root.description(),
-        user=stitch_root.user(),
-        date=stitch_root.date(),
-        files=sorted(stitch_root.files()),
-        extra=base_extra,
-        filectxfn = hgutils.copying_fctxfn(stitch_root),
-    )
 
     with hgutils.abort_on_error(tr):
-        nextnode = target_repo.commitctx(memctx)
+        nextnode = hgutils.replay_commit(
+            repo=target_repo,
+            base=nextnode,
+            source_ctx=stitch_root,
+            target_branch=options.import_as_branch,
+        )
 
 if options.close:
 
