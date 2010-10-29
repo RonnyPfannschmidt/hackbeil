@@ -17,7 +17,16 @@ class BranchReplay(object):
         self.branches = {}
 
 
-    def action(self, action, **kw):
+    def revdone(self, nextrev=None):
+        previous = self.rev
+        if nextrev is not None:
+            assert nextrev > self.rev, 'uh i don\'t go backward bastard'
+            self.rev = nextrev
+        else:
+            self.rev+=1
+        return previous
+
+    def event(self, action, **kw):
         if action == 'add':
             self.add(**kw)
         elif action == 'delete':
