@@ -45,7 +45,7 @@ for line in input:
             continue
         base, name = posixpath.split(path)
 
-        if base not in ['pypy', 'pypy/branch', 'pypy/release']:
+        if base not in ['pypy', 'pypy/trunk', 'pypy/branch', 'pypy/release']:
             continue
 
         if base == 'pypy' and name in ['branch', 'tag', 'django', 'www']:
