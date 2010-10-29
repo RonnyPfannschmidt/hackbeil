@@ -11,30 +11,32 @@ group.add_argument('--source-rev', default='tip')
 group.add_argument('--svn-source-rev', type=int)
 
 
+from hackbeil.hgutils import progressui, find_svn_rev, copying_fctxfn
+
 import hgext.progress
 import sys
 import errno
 
 options = parser.parse_args()
 
-from mercurial.ui import ui as Ui
 from mercurial import commands, hg, localrepo, context
 
-ui = Ui()
-hgext.progress.uisetup(ui)
+ui = progressui()
 
 ui.status('opening repos\n')
 target_repo = localrepo.localrepository(ui, '.')
 stitch_source = localrepo.localrepository(ui, options.source)
 
 if options.svn_source_rev:
-    options.source_rev = find_svn_rev(
+    source_rev = find_svn_rev(
         repo=target_repo,
         wanted_branch=options.source_branch,
         wanted_rev=options.svn_source_rev,
     )
+else:
+    source_rev = options.source_rev
 
-current = target_repo[options.source_rev]
+current = target_repo[source_rev]
 ui.status('found %s:%s (%s)\n' % (current.rev(), current.hex(), current.extra().get('convert_revision')))
 
 ui.status('comparing first change and source parent\n')
@@ -61,22 +63,6 @@ ui.status('added %s removed %s changed %s common %s\n\n' % (
 
 
 
-def filectx(repo, ctx, path):
-    if path not in stitch_root:
-        error = IOError()
-        #error.errno=errno.ENOENT
-        #error.filename=path
-        raise error
-
-    other = stitch_root[path]
-    copy = other.renamed() and other.renamed()[0]
-    return context.memfilectx(
-        path=path,
-        data=other.data(),
-        islink='l' in other.flags(),
-        isexec='x' in other.flags(),
-        copied = copy,
-    )
 
 
 
@@ -96,7 +82,7 @@ memctx = context.memctx(
     date=stitch_root.date(),
     files=sorted(added|removed|changed),
     extra=base_extra,
-    filectxfn = filectx,
+    filectxfn = copying_fctxfn(stitch_root),
 )
 
 try:
@@ -126,7 +112,7 @@ for index, commit in enumerate(stitch_source):
         date=stitch_root.date(),
         files=sorted(stitch_root.files()),
         extra=base_extra,
-        filectxfn = filectx,
+        filectxfn = copying_fctxfn(stitch_root),
     )
 
     try:
