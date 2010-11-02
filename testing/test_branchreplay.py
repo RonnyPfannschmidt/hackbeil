@@ -38,7 +38,7 @@ def test_simple_replay(replay):
     assert 'trunk' not in replay.branches
     assert replay.branch_history[0].endrev == 100
 
-    previous = replay.revdone()
+    replay.revdone(nextrev=200)
 
     replay.event(
         action='delete',
@@ -49,6 +49,17 @@ def test_simple_replay(replay):
         kind='dir',
         path='trunk',
         copy_from='branch/test',
-        copy_rev=previous,
+        copy_rev=150,
     )
     replay.revdone()
+    assert len(replay.branches) == 1
+
+    assert len(replay.branch_history) == 3
+
+
+def test_replat_pop_missing_branch(replay):
+
+    replay.event(
+        action='delete',
+        path='foo')
+

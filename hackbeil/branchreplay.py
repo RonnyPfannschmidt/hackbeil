@@ -1,4 +1,6 @@
-
+import logging
+logging.basicConfig()
+log = logging.getLogger('branch.replay')
 
 class Branch(object):
     def __init__(self, path, startrev):
@@ -41,5 +43,10 @@ class BranchReplay(object):
         self.branches[path] = branch
 
     def remove(self, path, **kw):
-        branch = self.branches.pop(path)
-        branch.endrev = self.rev
+        branch = self.branches.pop(path, None)
+        if branch is None:
+            log.error('missing branch %s', path)
+        else:
+            branch.endrev = self.rev
+            if branch.endrev==self.rev:
+                print branch
