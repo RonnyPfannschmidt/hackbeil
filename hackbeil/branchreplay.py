@@ -29,20 +29,21 @@ class BranchReplay(object):
         return previous
 
     def event(self, action, **kw):
-        if action == 'add':
-            self.add(**kw)
-        elif action == 'delete':
-            self.remove(**kw)
+        method = getattr(self, 'on_' + action)
+        method(**kw)
 
 
-    def add(self, kind, path, **kw):
+    def on_add(self, kind, path, **kw):
         if kind !='dir':
             return
         branch = Branch(path, self.rev)
         self.branch_history.append(branch)
         self.branches[path] = branch
+    
+    def on_change(self, **kw):
+        pass #XXX mark actual changes
 
-    def remove(self, path, **kw):
+    def on_delete(self, path, **kw):
         branch = self.branches.pop(path, None)
         if branch is None:
             log.error('missing branch %s', path)
