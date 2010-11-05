@@ -21,7 +21,7 @@ class Branch(object):
 class BranchReplay(object):
 
     def __init__(self, initial):
-        self.rev = 0
+        self.rev = -1
         self.branch_history = [initial]
         self.branches = {initial.path: initial}
 
@@ -45,16 +45,17 @@ class BranchReplay(object):
 
 
     def on_add(self, kind, path, **kw):
-        if kind !='dir':
+        if kind !='dir' or 'copy_from' not in kw:
             return
         source_branch = self.findbranch(
             path=kw.get('copy_from'),
             rev=kw.get('copy_rev'))
         if source_branch is None:
             copy_from = kw.get('copy_from')
+            if not copy_from.startswith('pypy/'):
+                return
             if copy_from:
-                newbase,  maybe_pypy = copy_from.rsplit('/', 1)
-                if maybe_pypy == 'pypy':
+                if copy_from.endswith('/pypy'):
                     print self.rev, path, 'invavalid /pypy branch from', copy_from
                 else:
                     print self.rev, path, 'wtf', kw
@@ -64,7 +65,9 @@ class BranchReplay(object):
         branch = Branch(path, self.rev)
         self.branch_history.append(branch)
         #XXX pypy magic
-        if path.startswith('pypy/release/') and not path[-1] =='x':
+        if path.startswith('pypy/release/'):# and not path[-1] =='x':
+            return
+        if path.startswith('pypy/tag'):
             return
         self.branches[path] = branch
     def on_change(self, **kw):
@@ -76,3 +79,7 @@ class BranchReplay(object):
             branch.endrev = self.rev
             if branch.endrev==self.rev-1:
                 print 'shorty', branch
+
+
+    def on_replace(self, **kw):
+        pass
