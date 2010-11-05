@@ -8,6 +8,10 @@ from hackbeil.branchreplay import BranchReplay, Branch
 branchreplay = BranchReplay(
     initial=Branch('pypy/trunk/src', 320)
 )
+import pdb
+def excepthook(*k):
+    pdb.pm()
+sys.excepthook = excepthook
 
 fp = open(sys.argv[1])
 for line in fp:
