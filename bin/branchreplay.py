@@ -17,8 +17,10 @@ for line in fp:
 
 
 import pprint
+print 'all branches'
 pprint.pprint(branchreplay.branch_history)
-pprint.pprint(branchreplay.branches)
+print 'active branches'
+pprint.pprint(branchreplay.branches.values())
 
-print 'history', len(branchreplay.branch_history)
-print 'branches', len(branchreplay.branches)
+print 'number of all    branches', len(branchreplay.branch_history)
+print 'number of active branches', len(branchreplay.branches)
