@@ -47,6 +47,8 @@ class BranchReplay(object):
     def on_add(self, kind, path, **kw):
         if kind !='dir' or 'copy_from' not in kw:
             return
+        if not path.startswith('pypy/'):
+            return
         source_branch = self.findbranch(
             path=kw.get('copy_from'),
             rev=kw.get('copy_rev'))
