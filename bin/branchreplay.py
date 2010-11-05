@@ -2,10 +2,12 @@
 
 import sys
 import simplejson as json
-from hackbeil.branchreplay import BranchReplay
+from hackbeil.branchreplay import BranchReplay, Branch
 
 
-branchreplay = BranchReplay()
+branchreplay = BranchReplay(
+    initial=Branch('pypy/trunk/src', 320)
+)
 
 fp = open(sys.argv[1])
 for line in fp:
@@ -17,8 +19,8 @@ for line in fp:
 
 
 import pprint
-print 'all branches'
-pprint.pprint(branchreplay.branch_history)
+#print 'all branches'
+#pprint.pprint(branchreplay.branch_history)
 print 'active branches'
 pprint.pprint(branchreplay.branches.values())
 
