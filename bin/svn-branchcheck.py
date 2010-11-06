@@ -14,7 +14,7 @@ conn = subvertpy.ra.RemoteAccess(options.svnbase + options.branch)
 
 start, end = options.range.split('-')
 start = int(start)
-end = int(end)-1 if end != None else -1
+end = int(end)-1 if end != 'None' else -1
 
 log_iter = conn.iter_log(start=start,
                          end=end,
