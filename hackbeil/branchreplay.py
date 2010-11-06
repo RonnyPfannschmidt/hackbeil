@@ -1,22 +1,22 @@
-import logging
-logging.basicConfig()
-log = logging.getLogger('branch.replay')
 
 class Branch(object):
-    def __init__(self, path, startrev):
+    def __init__(self, path, startrev, source_branch=None, source_rev=None):
         self.path = path
         self.startrev = startrev
         self.endrev = None
-        self.source_branch = None
-        self.source_rev = None
+        self.source_branch = source_branch
+        self.source_rev = source_rev
 
     def matches(self, path, rev):
         return (path == self.path
                 and rev >=self.startrev
                 and (self.endrev is None or rev < self.endrev))
 
+    def __str__(self):
+        return self.path
+
     def __repr__(self):
-        return '<Branch {path} {startrev}-{endrev!r}>'.format(**vars(self))
+        return '<Branch {path} {startrev}-{endrev!r} from {source_branch!s}@{source_rev}>'.format(**vars(self))
 
 class BranchReplay(object):
 
@@ -64,7 +64,7 @@ class BranchReplay(object):
             else:
                 print self.rev, path, kw
             return
-        branch = Branch(path, self.rev)
+        branch = Branch(path, self.rev, source_branch,  kw.get('copy_rev'))
         self.branch_history.append(branch)
         #XXX pypy magic
         if path.startswith('pypy/release/'):# and not path[-1] =='x':
