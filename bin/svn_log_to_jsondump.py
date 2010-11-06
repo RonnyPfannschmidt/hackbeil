@@ -40,8 +40,6 @@ for (changed_paths, rev, props, has_children) in log_iter:
     for path, (log_action, copy_from, copy_rev, kind_id) in changed_paths.items():
         act = action_mapping[log_action]
         kind =  kind_mapping[kind_id]
-        if act == 'change' or kind == 'file':
-            continue
         # stripping the initial /
         action = { 'action': act, 'path': path[1:], 'kind': kind, }
         if copy_from is not None:
