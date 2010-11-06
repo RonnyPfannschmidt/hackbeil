@@ -1,8 +1,8 @@
-from hackbeil.branchreplay import BranchReplay
+from hackbeil.branchreplay import BranchReplay, Branch, do_replay
 
 
 def pytest_funcarg__replay(request):
-    return BranchReplay()
+    return BranchReplay(initial=None)
 
 
 def test_simple_replay(replay):

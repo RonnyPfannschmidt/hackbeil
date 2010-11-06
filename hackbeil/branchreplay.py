@@ -34,10 +34,7 @@ class BranchReplay(object):
         self.branches = {initial.path: initial}
 
     def findbranch(self, path, rev, subdir=False):
-        if rev == self.rev:
-            branchlist = self.branches.values()
-        else:
-            branchlist = self.branch_history
+        branchlist = reversed(self.branch_history)
 
         for branch in branchlist:
             if branch.matches(path, rev, subdir):
