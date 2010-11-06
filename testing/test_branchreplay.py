@@ -1,13 +1,14 @@
-from hackbeil.branchreplay import BranchReplay, Branch, do_replay
+from hackbeil.branchreplay import BranchReplay, Branch, replay
 
 
 def pytest_funcarg__replay(request):
-    return BranchReplay(initial=None)
+    return BranchReplay(initial=Branch('trunk', 1))
 
 
 def test_simple_replay(replay):
-    assert not replay.branch_history
-    assert not replay.branches
+    assert len(replay.branch_history) == 1
+    assert 'trunk' in replay.branches
+    
 
     replay.event(
         action='add',
@@ -16,9 +17,10 @@ def test_simple_replay(replay):
     )
     assert 'trunk' in replay.branches
 
-    previous = replay.revdone()
-
-
+    replay.revdone(nextrev=10)
+    previous = 9
+    print replay.branches
+    assert replay.findbranch(path='trunk', rev=previous)
     replay.event(
         action='add',
         kind='dir',
@@ -27,7 +29,7 @@ def test_simple_replay(replay):
         copy_rev=previous,
     )
 
-
+    print replay.branches
 
     replay.revdone(nextrev=100)
     replay.event(
@@ -44,6 +46,7 @@ def test_simple_replay(replay):
         action='delete',
         path='branch/test',
     )
+    print replay.branches
     replay.event(
         action='add',
         kind='dir',
@@ -57,7 +60,7 @@ def test_simple_replay(replay):
     assert len(replay.branch_history) == 3
 
 
-def test_replat_pop_missing_branch(replay):
+def test_replay_pop_missing_branch(replay):
 
     replay.event(
         action='delete',
