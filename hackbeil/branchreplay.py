@@ -1,3 +1,4 @@
+import simplejson
 
 class Branch(object):
     def __init__(self, path, startrev, source_branch=None, source_rev=None):
@@ -28,10 +29,12 @@ class Branch(object):
 
 class BranchReplay(object):
 
-    def __init__(self, initial):
+    def __init__(self, initial, tag_prefixes=[], required_path=None):
         self.rev = -1
         self.branch_history = [initial]
         self.branches = {initial.path: initial}
+        self.tag_prefixes = []
+        self.required_path = required_path
 
     def findbranch(self, path, rev, subdir=False):
         branchlist = reversed(self.branch_history)
@@ -50,13 +53,14 @@ class BranchReplay(object):
         return previous
 
     def event(self, action, **kw):
+        if (self.required_path and
+            not kw['path'].startswith(self.required_path)):
+            return
         method = getattr(self, 'on_' + action)
         method(**kw)
 
 
     def on_add(self, kind, path, **kw):
-        if not path.startswith('pypy/'):
-            return
         source_branch = self.findbranch(
             path=kw.get('copy_from'),
             rev=kw.get('copy_rev'))
@@ -67,11 +71,10 @@ class BranchReplay(object):
             return
         branch = Branch(path, self.rev, source_branch,  kw.get('copy_rev'))
         self.branch_history.append(branch)
-        #XXX pypy magic
-        if path.startswith('pypy/release/'):# and not path[-1] =='x':
-            return
-        if path.startswith('pypy/tag'):
-            return
+        #ignore tag locations for active branches
+        for tag_prefix in self.tag_prefixes:
+            if path.startswith(tag_prefix):
+                return
         self.branches[path] = branch
 
 
@@ -92,3 +95,24 @@ class BranchReplay(object):
 
     def on_replace(self, **kw):
         pass
+
+
+
+def json_listing(filename, ui=None):
+
+    with open(filename) as fp:
+        for line in fp:
+            data = simplejson.loads(line)
+            revno = data.get('revno')
+            if revno is not None and ui is not None:
+                ui.progress('json reading', pos=revno)
+            yield data
+
+
+def replay(branchreplay, items):
+    for data in items:
+        if 'revno' in data:
+            branchreplay.revdone(nextrev=data['revno'])
+        else:
+            branchreplay.event(**data)
+
