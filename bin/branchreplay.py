@@ -29,14 +29,13 @@ import pprint
 #print 'all branches'
 #pprint.pprint(branchreplay.branch_history)
 
-print 'branches with no changes'
 no_changes = [b for b in branchreplay.branch_history if not b.changesets]
-pprint.pprint(no_changes)
-print 'branches with no changes', len(no_changes)
+for b in no_changes:
+    print b.path, '%s-%s'%(b.startrev, b.endrev)
+#pprint.pprint(no_changes)
+#print 'branches with no changes', len(no_changes)
 #print 'active branches'
 #pprint.pprint(branchreplay.branches.values())
 
 
 
-print 'number of all    branches', len(branchreplay.branch_history)
-print 'number of active branches', len(branchreplay.branches)
