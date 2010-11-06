@@ -8,10 +8,17 @@ class Branch(object):
         self.source_rev = source_rev
         self.changesets = set()
 
+    def active_in(self, rev):
+        if rev >=self.startrev:
+            return self.endrev is None or rev < self.endrev
+
+
     def matches(self, path, rev, subdir=False):
-        return (path.startswith(self.path) if subdir else path == self.path
-                and rev >=self.startrev
-                and (self.endrev is None or rev < self.endrev))
+        if self.active_in(rev):
+            if subdir:
+                return path.startswith(self.path)
+            else:
+                return self.path == path
 
     def __str__(self):
         return self.path
@@ -27,7 +34,12 @@ class BranchReplay(object):
         self.branches = {initial.path: initial}
 
     def findbranch(self, path, rev, subdir=False):
-        for branch in self.branch_history:
+        if rev == self.rev:
+            branchlist = self.branches.values()
+        else:
+            branchlist = self.branch_history
+
+        for branch in branchlist:
             if branch.matches(path, rev, subdir):
                 return branch
 
@@ -46,23 +58,15 @@ class BranchReplay(object):
 
 
     def on_add(self, kind, path, **kw):
-        if kind !='dir' or 'copy_from' not in kw:
-            return
         if not path.startswith('pypy/'):
             return
         source_branch = self.findbranch(
             path=kw.get('copy_from'),
             rev=kw.get('copy_rev'))
         if source_branch is None:
-            
-            copy_from = kw.get('copy_from')
-            if not copy_from.startswith('pypy/'):
-                return
-            if copy_from:
-                if copy_from.endswith('/pypy'):
-                    print self.rev, path, 'invavalid /pypy branch from', copy_from
-                else:
-                    print self.rev, path, 'wtf', kw
+            branch = self.findbranch(path, self.rev, subdir=1)
+            if branch:
+                branch.changesets.add(self.rev)
             return
         branch = Branch(path, self.rev, source_branch,  kw.get('copy_rev'))
         self.branch_history.append(branch)
@@ -77,15 +81,13 @@ class BranchReplay(object):
     def on_change(self, path, **kw):
         branch = self.findbranch(path, self.rev, subdir=True)
         if branch is not None:
+            #print repr(branch), path, kw.get('kind')
             branch.changesets.add(self.rev)
 
     def on_delete(self, path, **kw):
         branch = self.branches.pop(path, None)
         if branch is not None:
             branch.endrev = self.rev
-            if branch.endrev==self.rev-1:
-                print 'shorty', branch
-
         else:
             branch = self.findbranch(path, self.rev, subdir=True)
             if branch is not None:

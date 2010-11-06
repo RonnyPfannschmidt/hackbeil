@@ -30,8 +30,9 @@ import pprint
 #pprint.pprint(branchreplay.branch_history)
 
 print 'branches with no changes'
-pprint.pprint([b for b in branchreplay.branch_history if not b.changesets])
-
+no_changes = [b for b in branchreplay.branch_history if not b.changesets]
+pprint.pprint(no_changes)
+print 'branches with no changes', len(no_changes)
 #print 'active branches'
 #pprint.pprint(branchreplay.branches.values())
 
