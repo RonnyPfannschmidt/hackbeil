@@ -1,17 +1,17 @@
 import simplejson
 
 class Branch(object):
-    def __init__(self, path, startrev, source_branch=None, source_rev=None):
+    def __init__(self, path, start, source_branch=None, source_rev=None):
         self.path = path
-        self.startrev = startrev
-        self.endrev = None
+        self.start = start
+        self.end = None
         self.source_branch = source_branch
         self.source_rev = source_rev
         self.changesets = set()
 
     def active_in(self, rev):
-        if rev >=self.startrev:
-            return self.endrev is None or rev < self.endrev
+        if rev >=self.start:
+            return self.end is None or rev < self.end
 
 
     def matches(self, path, rev, subdir=False):
@@ -21,11 +21,29 @@ class Branch(object):
             else:
                 return self.path == path
 
+
+    def to_json(self):
+        return {
+            'path': self.path,
+            'start': self.start,
+            'end': self.end,
+            'changesets' : sorted(self.changesets),
+            'source_branch': self.source_branch,
+            'source_rev': self.source_rev,
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        self = object.__new__(cls)
+        self.__dict__.update(data)
+        self.changesets = set(self.changesets)
+        return self
+
     def __str__(self):
         return self.path
 
     def __repr__(self):
-        return '<Branch {path} {startrev}-{endrev!r} from {source_branch!s}@{source_rev}>'.format(**vars(self))
+        return '<Branch {path} {start}-{end!r} from {source_branch!s}@{source_rev}>'.format(**vars(self))
 
 class BranchReplay(object):
 
@@ -35,6 +53,29 @@ class BranchReplay(object):
         self.branches = {initial.path: initial}
         self.tag_prefixes = []
         self.required_path = required_path
+
+    def to_json(self):
+        return {
+            'rev': self.rev,
+            'history': [x.to_json() for x in self.branch_history],
+            'tag_prefixes': self.tag_prefixes,
+            'required_path': self.required_path,
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        self = object.__new__(cls)
+        self.rev = data['rev']
+        self.tag_prefixes = data['tag_prefixes']
+        self.required_path = data['required_path']
+        self.branch_history = []
+        self.branches = {}
+        for item in data['history']:
+            branch = Branch.from_json(item)
+            self.branch_history.append(branch)
+            if branch.end is None:
+                self.branches[branch.path] = branch
+        return self
 
     def findbranch(self, path, rev, subdir=False):
         branchlist = reversed(self.branch_history)
@@ -64,12 +105,15 @@ class BranchReplay(object):
         source_branch = self.findbranch(
             path=kw.get('copy_from'),
             rev=kw.get('copy_rev'))
+
         if source_branch is None:
             branch = self.findbranch(path, self.rev, subdir=1)
             if branch:
                 branch.changesets.add(self.rev)
             return
-        branch = Branch(path, self.rev, source_branch,  kw.get('copy_rev'))
+        branch = Branch(path, self.rev,
+                        source_branch=source_branch.path,
+                        source_rev=kw.get('copy_rev'))
         self.branch_history.append(branch)
         #ignore tag locations for active branches
         for tag_prefix in self.tag_prefixes:
@@ -87,7 +131,7 @@ class BranchReplay(object):
     def on_delete(self, path, **kw):
         branch = self.branches.pop(path, None)
         if branch is not None:
-            branch.endrev = self.rev
+            branch.end = self.rev
         else:
             branch = self.findbranch(path, self.rev, subdir=True)
             if branch is not None:
