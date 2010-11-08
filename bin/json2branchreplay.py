@@ -13,7 +13,10 @@ from hackbeil.hgutils import progressui
 
 ui = progressui()
 
-br = BranchReplay(initial=Branch('pypy/trunk/src', 320))
+br = BranchReplay(
+    initial=Branch('pypy/trunk/src', 320),
+    required_path='pypy/',
+)
 replay(br, json_listing(opts.dump, ui))
 
 ui.status('writing replay dump\n')
