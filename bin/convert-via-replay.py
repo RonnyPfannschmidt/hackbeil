@@ -9,10 +9,10 @@ parser.add_argument('basedir')
 options = parser.parse_args()
 
 import subprocess
-
+from hackbeil.scripting.convert import convert_all
 from hackbeil.branchreplay import BranchReplay
+from hackbeil.hgutils import progressui
 import json
-from os import path
 
 
 with open(options.replay) as fp:
@@ -22,18 +22,11 @@ with open(options.replay) as fp:
 replay = BranchReplay.from_json(data)
 
 
-def targetdirname(branch):
-    return '{base}@{start}'.format(
-        base=branch.path.split('/')[-1],
-        start=branch.start,
-    )
-
-
 def call_convert(**args):
 
     
     command = (
-        'hg convert -s svn {source} {dest} '
+        'hg convert -q -s svn {source} {dest} '
         '--config convert.svn.startrev={start}{end}'
     )
     subprocess.check_call(command.format(**args), shell=True)
@@ -48,24 +41,9 @@ def call_hgsubversion(**args):
 
     subprocess.check_call(command.format(**args), shell=True)
 
+ui = progressui()
 
-def convert(branch, repo, basedir):
-    targetdir = targetdirname(branch)
-    
-    
-    call_args = {
-        'source': repo + branch.path,
-        'start': branch.start,
-        'end': (' -r %s' % (branch.end-1)) if branch.end is not None else '',
-        'dest': path.join(basedir, targetdir),
-    }
+convert_all(ui, replay, call_convert, options.svnroot, options.basedir)
 
-    call_convert(**call_args)
-
-
-for branch in replay.branch_history:
-    print 'converting', repr(branch)
-    convert(branch, options.svnroot, options.basedir)
-
-print 'echo weeeeeeeeee'
+ui.status('weeeeeeeeee\n')
 
