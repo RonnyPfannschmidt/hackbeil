@@ -36,7 +36,7 @@ def call_convert(**args):
         'hg convert -s svn {source} {dest} '
         '--config convert.svn.startrev={start}{end}'
     )
-    subprocess.call(command.format(**args), shell=True)
+    subprocess.check_call(command.format(**args), shell=True)
 
 
 def call_hgsubversion(**args):
@@ -46,7 +46,7 @@ def call_hgsubversion(**args):
     else:
         command = 'hg clone -q -U {source} {dest} --startrev {start} {end}'
 
-    subprocess.call(command.format(**args), shell=True)
+    subprocess.check_call(command.format(**args), shell=True)
 
 
 def convert(branch, repo, basedir):
