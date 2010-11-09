@@ -12,14 +12,18 @@ def test_convert():
             {
                 'path': 'trunk',
                 'start': 1,
-                'changesets':[2,3,4],
-                'end': None
+                'end': None,
+                'changesets': [2,3,4],
+                'source_branch': None,
+                'source_rev': None,
             },
             {
                 'path': 'branch/test',
                 'start': 5,
-                'changesets': [ 6,7],
                 'end': None,
+                'changesets': [ 6,7],
+                'source_branch': 'trunk',
+                'source_rev': 4,
             },
         ],
     })

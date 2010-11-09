@@ -35,8 +35,13 @@ class Branch(object):
     @classmethod
     def from_json(cls, data):
         self = object.__new__(cls)
-        self.__dict__.update(data)
-        self.changesets = set(self.changesets)
+        self.path = data['path']
+        self.start = data['start']
+        self.end = data['end']
+        self.changesets = set(data['changesets'])
+        self.source_branch = data['source_branch']
+        self.source_rev = data['source_rev']
+
         return self
 
     def __str__(self):
@@ -57,7 +62,6 @@ class BranchReplay(object):
         return {
             'rev': self.rev,
             'history': [x.to_json() for x in self.branch_history],
-            'tag_prefixes': self.tag_prefixes,
             'required_path': self.required_path,
         }
 
@@ -65,7 +69,6 @@ class BranchReplay(object):
     def from_json(cls, data):
         self = object.__new__(cls)
         self.rev = data['rev']
-        self.tag_prefixes = data['tag_prefixes']
         self.required_path = data['required_path']
         self.branch_history = []
         for item in data['history']:
