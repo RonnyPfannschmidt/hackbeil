@@ -46,7 +46,7 @@ def test_branch_splits_chunk():
                 'path': 'trunk',
                 'start': 1,
                 'end': 20,
-                'changesets': [],
+                'changesets': [1,2,3,4,5,6,7,8,9],
                 'source_branch': None,
                 'source_rev': None
             },
@@ -54,7 +54,7 @@ def test_branch_splits_chunk():
                 'path': 'branch/test',
                 'start': 10,
                 'end':  21,
-                'changesets': [],
+                'changesets': [11,12,13,14,15,16],
                 'source_branch': 'trunk',
                 'source_rev': 9,
             },
@@ -62,7 +62,7 @@ def test_branch_splits_chunk():
                 'path': 'trunk',
                 'start': 20,
                 'end': None,
-                'changesets': [],
+                'changesets': [24, 25],
                 'source_branch': 'branch/test',
                 'source_rev': 20,
             },
@@ -76,4 +76,7 @@ def test_branch_splits_chunk():
     chunks = event_replay.generate_chunklist()
     print chunks
     assert len(chunks) == 5
+
+    actions = list(event_replay.generate_actions())
+    assert len(actions) == 3
 
