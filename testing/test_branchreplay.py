@@ -96,7 +96,6 @@ def test_branch_replay_json():
         'history': [rp.branch_history[0].to_json()],
         'required_path': None,
         'rev': -1,
-        'tag_prefixes': [],
     }
 
 
