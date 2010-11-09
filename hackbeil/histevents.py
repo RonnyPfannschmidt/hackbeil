@@ -17,6 +17,7 @@ class Chunk(object):
         self.start = start
         self.end = None
         self.children = []
+        self.parent = parent
         if parent:
             parent.children.append(self)
 
@@ -34,10 +35,9 @@ class EventReplay(object):
     def findchunk(self, path ,rev):
         print path, rev
         for chunk in reversed(self.chunks):
-            print chunk
             if chunk.end is not None and chunk.end<rev:
                 continue
-            elif chunk.start<rev and chunk.branch.path == path:
+            elif chunk.start<=rev and chunk.branch.path == path:
                 return chunk
 
     def _add_replay(self):
@@ -48,10 +48,6 @@ class EventReplay(object):
         pass
 
     def generate_chunklist(self):
-        if self.executed:
-            return self.chunks
-        self.executed = True
-
         while self._events:
             curr = heapq.heappop(self._events)
             rev, action = curr[:2]
@@ -63,6 +59,8 @@ class EventReplay(object):
         if newbranch.source_branch:
             oldchunk = self.findchunk(newbranch.source_branch,
                                       newbranch.source_rev)
+            if not oldchunk:
+                import pdb;pdb.set_trace()
             oldchunk.end = rev
             newchunk = Chunk(start=rev,
                              branch=oldchunk.branch,
@@ -79,3 +77,17 @@ class EventReplay(object):
         chunk = self.findchunk(branch.path, rev)
         chunk.end = rev
 
+
+
+
+
+    def generate_actions(self):
+        chunks = self.generate_chunklist()
+        for chunk in chunks:
+            branch = chunk.branch
+            # dont yield actions for replays without change
+            if not branch.changesets or max(branch.changesets) < chunk.start:
+                if chunk.end==branch.end:
+                    yield 'end', chunk.parent
+            else:
+                yield 'replay', chunk
