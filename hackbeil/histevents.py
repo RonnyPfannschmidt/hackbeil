@@ -35,9 +35,9 @@ class EventReplay(object):
     def findchunk(self, path ,rev):
         print path, rev
         for chunk in reversed(self.chunks):
-            if chunk.end is not None and chunk.end<rev:
+            if chunk.end is not None and chunk.end < rev:
                 continue
-            elif chunk.start<=rev and chunk.branch.path == path:
+            elif chunk.start < rev and chunk.branch.path == path:
                 return chunk
 
     def _add_replay(self):
@@ -59,13 +59,14 @@ class EventReplay(object):
         if newbranch.source_branch:
             oldchunk = self.findchunk(newbranch.source_branch,
                                       newbranch.source_rev)
-            if not oldchunk:
-                import pdb;pdb.set_trace()
-            oldchunk.end = rev
-            newchunk = Chunk(start=rev+1,
-                             branch=oldchunk.branch,
-                             parent=oldchunk)
-            self.chunks.append(newchunk)
+            if oldchunk.end is not None:
+                oldchunk.end = rev
+                newchunk = Chunk(start=rev+1,
+                                 branch=oldchunk.branch,
+                                 parent=oldchunk)
+                self.chunks.append(newchunk)
+            else:
+                oldchunk = None
         else:
             oldchunk = None
         chunk = Chunk(start=rev,
@@ -79,15 +80,11 @@ class EventReplay(object):
 
 
 
-
-
     def generate_actions(self):
         chunks = self.generate_chunklist()
         for chunk in chunks:
             branch = chunk.branch
             # dont yield actions for replays without change
-            if not branch.changesets or max(branch.changesets) < chunk.start:
-                if chunk.end==branch.end:
-                    yield 'end', chunk.parent
-            else:
-                yield 'replay', chunk
+            yield 'replay', chunk
+            if branch.end is not None and chunk.end == branch.end:
+                yield 'close', chunk
