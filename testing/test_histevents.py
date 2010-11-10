@@ -74,9 +74,12 @@ def test_branch_splits_chunk():
     event_replay._add_replay()
     print event_replay._events
     chunks = event_replay.generate_chunklist()
-    print chunks
-    assert len(chunks) == 5
+    assert len(chunks) == 3
 
     actions = list(event_replay.generate_actions())
-    assert len(actions) == 3
+    import pprint
+    pprint.pprint(actions)
+    assert len(actions) == 5
+
+    assert actions[-1][1].end is None
 
