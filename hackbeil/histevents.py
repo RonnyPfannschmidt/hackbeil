@@ -62,7 +62,7 @@ class EventReplay(object):
             if not oldchunk:
                 import pdb;pdb.set_trace()
             oldchunk.end = rev
-            newchunk = Chunk(start=rev,
+            newchunk = Chunk(start=rev+1,
                              branch=oldchunk.branch,
                              parent=oldchunk)
             self.chunks.append(newchunk)
