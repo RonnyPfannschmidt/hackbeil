@@ -29,9 +29,9 @@ def test_simple_event_replay():
     branch_replay = simple_replay()
     event_replay = EventReplay(branch_replay)
     event_replay._add_replay()
-    print event_replay._events
+    print sorted(event_replay._events)
     chunks = event_replay.generate_chunklist()
-
+    print chunks
 
     assert event_replay.findchunk('trunk', 10)
     
@@ -74,6 +74,7 @@ def test_branch_splits_chunk():
     event_replay._add_replay()
     print event_replay._events
     chunks = event_replay.generate_chunklist()
+    print chunks
     assert len(chunks) == 3
 
     actions = list(event_replay.generate_actions())
