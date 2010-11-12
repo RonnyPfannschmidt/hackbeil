@@ -34,8 +34,9 @@ class EventReplay(object):
 
     def findchunk(self, path ,rev):
         for chunk in self.chunks:
-            if path == chunk.branch.path:
-                if chunk.end is None or rev < chunk.end:
+            if (path == chunk.branch.path
+                and chunk.start <= rev
+                and (chunk.end is None or rev < chunk.end)):
                     return chunk
 
     def _add_replay(self):
@@ -58,14 +59,14 @@ class EventReplay(object):
             oldchunk = self.findchunk(newbranch.source_branch,
                                       newbranch.source_rev)
 
-            if oldchunk.end is not None:
+            if oldchunk.end is None:
                 oldchunk.end = rev
                 newchunk = Chunk(start=rev,
                                  branch=oldchunk.branch,
                                  parent=oldchunk)
-                self.chunks.append(newchunk)
-            else:
-                oldchunk = None
+                self.chunks.insert(
+                    self.chunks.index(oldchunk)+1,
+                    newchunk)
         else:
             oldchunk = None
         chunk = Chunk(start=rev,
