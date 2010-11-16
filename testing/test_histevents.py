@@ -34,7 +34,6 @@ def test_simple_event_replay():
     print chunks
 
     assert event_replay.findchunk('trunk', 10)
-    
 
 
 def test_branch_splits_chunk():
