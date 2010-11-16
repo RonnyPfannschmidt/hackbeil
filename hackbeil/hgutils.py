@@ -58,10 +58,7 @@ def copying_fctxfn(stitch_root):
 
     def filectx(repo, ctx, path):
         if path not in stitch_root:
-            error = IOError()
-            #error.errno=errno.ENOENT
-            #error.filename=path
-            raise error
+            raise IOError()
 
         other = stitch_root[path]
         copy = other.renamed() and other.renamed()[0]
@@ -76,14 +73,12 @@ def copying_fctxfn(stitch_root):
 
 
 def close_commit(repo, lookup, date=None):
-    ui = repo.ui
     ctx = repo[lookup]
-
     if date is None:
         date = ctx.date()
     branch = ctx.branch()
 
-    ui.status('closing branch %s\n' % branch)
+    repo.ui.status('closing branch %s\n' % branch)
     closectx = context.memctx(
         repo=repo,
         parents=[ctx.rev(), None],
@@ -101,56 +96,13 @@ def close_commit(repo, lookup, date=None):
     repo.commitctx(closectx)
 
 
-def replay_a_initial_commit(repo, base, source, target_branch=None):
-    ui = repo.ui
-    ui.status('comparing first change and source parent\n')
-
-    source_ctx = source[0] # 0 is always root, ignore secondaries
-    current = repo[base]
-
-    new_files = set(source_ctx)
-    old_files = set(current)
-
-    common = sorted(old_files&new_files)
-
-    added = new_files-old_files
-    removed = old_files-new_files
-    changed = set(
-        name for name in common
-        if current[name].data() != source_ctx[name].data()
-    )
-
-    ui.status('added %s removed %s changed %s common %s\n' % (
-        len(added),
-        len(removed),
-        len(changed),
-        len(common),
-    ))
-
-    ui.status('stitching initial revision\n')
-
-    base_extra = source_ctx.extra()
-    if target_branch is not None:
-        base_extra['branch'] = target_branch
-
-    memctx = context.memctx(
-        repo=repo,
-        parents=[current.node(), None],
-        text=source_ctx.description(),
-        user=source_ctx.user(),
-        date=source_ctx.date(),
-        files=sorted(added|removed|changed),
-        extra=base_extra,
-        filectxfn = copying_fctxfn(source_ctx),
-    )
-
-
-    return repo.commitctx(memctx)
-
-
-
-
 def replay_commit(repo, base, source_ctx, target_branch=None):
+
+    if len(source_ctx.parents()) == 1 and source_ctx.parents()[0].rev()==-1:
+        files = sorted(set(source_rev)|set(repo[base]))
+    else:
+        # only apply our changes if not a root
+        files = sorted(source_ctx.files())
 
     base_extra = source_ctx.extra()
     if target_branch is not None:
@@ -162,7 +114,7 @@ def replay_commit(repo, base, source_ctx, target_branch=None):
         text=source_ctx.description(),
         user=source_ctx.user(),
         date=source_ctx.date(),
-        files=sorted(source_ctx.files()),
+        files=files,
         extra=base_extra,
         filectxfn = copying_fctxfn(source_ctx),
     )
