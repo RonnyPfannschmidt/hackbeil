@@ -11,7 +11,6 @@ def events_from_replay(replay):
 
 class Chunk(object):
 
-    @property
     def changesets(self):
         def cset_filter(id):
             return id >= self.start and (self.end is None or id < self.end)
