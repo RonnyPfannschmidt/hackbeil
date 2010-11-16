@@ -11,6 +11,12 @@ def events_from_replay(replay):
 
 class Chunk(object):
 
+    @property
+    def changesets(self):
+        def cset_filter(id):
+            return id >= self.start and (self.end is None or id < self.end)
+        return set(filter(cset_filter, self.branch.changesets))
+
     def __init__(self, start, branch, parent=None):
         self.given_name = None
         self.branch = branch
@@ -85,6 +91,10 @@ class EventReplay(object):
         for chunk in chunks:
             branch = chunk.branch
             # dont yield actions for replays without change
+            changesets = chunk.changesets()
+            if not changesets:
+                continue
+
             yield 'replay', chunk
-            if branch.end is not None and chunk.end == branch.end:
+            if branch.end is not None and chunk.end > max(branch.changesets or [chunk.end]):
                 yield 'close', chunk
