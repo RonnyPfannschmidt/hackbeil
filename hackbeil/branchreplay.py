@@ -1,5 +1,6 @@
 import simplejson
 
+
 class Branch(object):
     def __init__(self, path, start, source_branch=None, source_rev=None):
         self.path = path
@@ -110,9 +111,11 @@ class BranchReplay(object):
             if branch:
                 branch.changesets.add(self.rev)
             return
+        
         branch = Branch(path, self.rev,
                         source_branch=source_branch.path,
                         source_rev=kw.get('copy_rev'))
+
         self.branch_history.append(branch)
 
     def on_change(self, path, **kw):
@@ -131,7 +134,8 @@ class BranchReplay(object):
                 branch.changesets.add(self.rev)
 
     def on_replace(self, **kw):
-        pass
+        self.on_delete(**kw)
+        self.on_add(**kw)
 
 
 
