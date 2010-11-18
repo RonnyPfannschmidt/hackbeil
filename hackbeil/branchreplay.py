@@ -18,7 +18,7 @@ class Branch(object):
     def matches(self, path, rev, subdir=False):
         if self.active_in(rev):
             if subdir:
-                return path.startswith(self.path)
+                return path.startswith(self.path+'/')
             else:
                 return self.path == path
 
