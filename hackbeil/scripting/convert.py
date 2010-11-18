@@ -22,6 +22,7 @@ def do_convert(converter, branch, repo, basedir):
 def convert_all(ui, replay, convert_call, repo, basedir):
     for idx, branch in enumerate(replay.branch_history):
         name = targetdirname(branch)
+        ui.status('%s %s/%s\n'%(name, idx, len(replay.branch_history))),
         ui.progress('converting repos',
                     pos=idx,
                     total=len(replay.branch_history),
