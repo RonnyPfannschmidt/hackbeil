@@ -40,18 +40,10 @@ ui.status('found %s:%s (%s)\n' % (current.rev(),
 
 tr = target_repo.transaction('commit')
 
-with hgutils.abort_on_error(tr):
-    nextnode = hgutils.replay_a_initial_commit(
-        repo=target_repo,
-        base=source_rev,
-        source=stitch_source,
-        target_branch=options.import_as_branch,
-    )
+nextnode = current.rev()
 
 for index, commit in enumerate(stitch_source):
     # we already took the first commit
-    if not index:
-        continue
     ui.progress('stich rev', pos=index+1, total=len(stitch_source))
 
     stitch_root = stitch_source[index]
