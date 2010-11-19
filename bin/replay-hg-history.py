@@ -9,6 +9,15 @@ from hackbeil.scripting.convert import targetdirname
 from mercurial import localrepo
 
 
+import pdb
+import sys
+import traceback
+def hk(*k):
+    pdb.pm()
+    traceback.print_exc()
+
+sys.excepthook = hk
+
 parser = ArgumentParser()
 parser.add_argument('replay')
 parser.add_argument('convert_roots')
@@ -28,8 +37,8 @@ with open(options.replay) as fp:
 
 
 ui.status('generating history event list\n')
-er = EventReplay(br)
-er._add_replay()
+er = EventReplay()
+er.add_replay(br)
 
 
 chunks = er.generate_chunklist()

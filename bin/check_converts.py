@@ -51,8 +51,8 @@ ui.status('difference: %s\n'%(commits - changesets))
 
 from hackbeil.histevents import EventReplay
 
-er = EventReplay(br)
-er._add_replay()
+er = EventReplay()
+er.add_replay(br)
 for idx, chunk in enumerate(er.generate_chunklist()):
 
     branch = chunk.branch
