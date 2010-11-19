@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import json
+import os
 from argparse import ArgumentParser
 from hackbeil.hgutils import progressui, replay_commit, close_commit, abort_on_error
 from hackbeil.branchreplay import BranchReplay
@@ -9,28 +11,17 @@ from hackbeil.scripting.convert import targetdirname
 from mercurial import localrepo
 
 
-import pdb
-import sys
-import traceback
-def hk(*k):
-    pdb.pm()
-    traceback.print_exc()
-
-sys.excepthook = hk
-
 parser = ArgumentParser()
 parser.add_argument('replay')
 parser.add_argument('convert_roots')
 parser.add_argument('target_repo')
 
 options = parser.parse_args()
-import os
 
 
 
 ui = progressui()
 ui.status('reading replay\n')
-import json
 with open(options.replay) as fp:
     data = json.load(fp)
     br = BranchReplay.from_json(data)
@@ -48,7 +39,12 @@ while default_chunk is not None:
     default_chunk.given_name = 'default'
     default_chunk = default_chunk.parent
 
-
+total_changesets = 0
+ui.status('creating statistics\n')
+for branch in br.branch_history:
+    target = targetdirname(branch)
+    repo = localrepo.localrepository(ui, os.path.join(options.convert_roots, target))
+    total_changesets += len(repo)
 
 ui.status('creating target %s\n' % options.target_repo)
 target_repo = localrepo.localrepository(ui, options.target_repo)
@@ -65,19 +61,27 @@ def svnrev(ctx):
     return int(rev)
 
 
+ui.status('building up lookup for completed commits')
+
+completed_lookup = {}
+
+for commit in target_repo:
+    ui.progress('scanning', pos=commit+1, total=len(target_repo))
+    convert_rev = target_repo[commit].extra().get('convert_revision')
+    completed_lookup[convert_rev] = commit
 
 
 def maybe_replay_commit(repo, base, source_ctx, target_branch=None):
     target = repo[base]
     se = source_ctx.extra()
-    for child in target.children():
-        ce = child.extra()
-        if ce['convert_revision'] == se['convert_revision']:
-            return child.rev()
+    convert_rev = se['convert_revision']
+    if convert_rev in completed_lookup:
+            return completed_lookup[convert_rev]
     return replay_commit(repo, base, source_ctx, target_branch)
 
 
 
+total_converted = 0
 for idx, chunk in enumerate(chunks):
     source_repo_name = targetdirname(chunk.branch)
     ui.status('replaying chunk %s %s/%s\n'%(chunk, idx+1, len(chunks)))
@@ -101,10 +105,10 @@ for idx, chunk in enumerate(chunks):
                 break
             source_ctx = source_repo[rev]
 
-            ui.progress('replay ' + source_repo_name,
-                        pos=rev+1,
+            ui.progress('replay',
+                        pos=total_converted,
                         item=source_ctx.hex(),
-                        total=len(source_repo))
+                        total=total_changesets)
             if rev == len(source_repo) or (chunk.end and svnrev(source_ctx) >= chunk.end):
                 chunk.nextrev = rev
                 chunk.nextbase = base
@@ -112,7 +116,7 @@ for idx, chunk in enumerate(chunks):
             else:
                 base = maybe_replay_commit(target_repo, base=base, source_ctx=source_ctx, target_branch=chunk.guessed_name())
                 rev += 1
-        ui.progress('replay ' + source_repo_name, pos=None)
+                total_converted += 1
         tr.close()
 
 
