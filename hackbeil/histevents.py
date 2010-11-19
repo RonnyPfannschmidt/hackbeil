@@ -1,4 +1,5 @@
 import heapq
+from hackbeil.scripting.convert import targetdirname
 
 def events_from_replay(replay):
     for branch in replay.branch_history:
@@ -25,6 +26,15 @@ class Chunk(object):
         self.parent = parent
         if parent:
             parent.children.append(self)
+
+    def guessed_name(self):
+        if self.given_name is not None:
+            return self.given_name
+        else:
+            if self.end is None:
+                return self.branch.path.split('/')[-1]
+            else:
+                return targetdirname(self.branch)
 
     def __repr__(self):
         return '<{branch.path}@{start}-{end}>'.format(**vars(self))
