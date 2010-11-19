@@ -72,8 +72,8 @@ def maybe_replay_commit(repo, base, source_ctx, target_branch=None):
     se = source_ctx.extra()
     for child in target.children():
         ce = child.extra()
-        ce['convert_revision'] == se['convert_revision']
-        return child.rev()
+        if ce['convert_revision'] == se['convert_revision']:
+            return child.rev()
     return replay_commit(repo, base, source_ctx, target_branch)
 
 
