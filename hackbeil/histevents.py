@@ -41,7 +41,6 @@ class Chunk(object):
 
 class EventReplay(object):
     def __init__(self):
-        self.branchreplay = branchreplay
         self.chunks = []
         self.executed = False
         self._events = []
