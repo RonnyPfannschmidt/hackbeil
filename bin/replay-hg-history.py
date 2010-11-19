@@ -43,7 +43,8 @@ while default_chunk is not None:
 
 total_changesets = 0
 ui.status('creating statistics\n')
-for branch in br.branch_history:
+for idx, branch in enumerate(br.branch_history):
+    ui.progress('scanning converts', pos=idx+1, total=len(br.branch_history))
     target = targetdirname(branch)
     repo = localrepo.localrepository(ui, os.path.join(options.convert_roots, target))
     total_changesets += len(repo)
@@ -63,7 +64,7 @@ def svnrev(ctx):
     return int(rev)
 
 
-ui.status('building up lookup for completed commits')
+ui.status('building lookup table for completed commits\n')
 
 completed_lookup = {}
 
