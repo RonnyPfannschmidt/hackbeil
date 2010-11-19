@@ -40,7 +40,7 @@ class Chunk(object):
         return '<{branch.path}@{start}-{end}>'.format(**vars(self))
 
 class EventReplay(object):
-    def __init__(self, branchreplay = None, merges=None):
+    def __init__(self):
         self.branchreplay = branchreplay
         self.chunks = []
         self.executed = False
@@ -54,8 +54,8 @@ class EventReplay(object):
                 and (chunk.end is None or rev < chunk.end)):
                     return chunk
 
-    def _add_replay(self):
-        for item in events_from_replay(self.branchreplay):
+    def add_replay(self, replay):
+        for item in events_from_replay(replay):
             heapq.heappush(self._events, item)
 
     def add_mergelist(self):
@@ -93,17 +93,3 @@ class EventReplay(object):
         chunk = self.findchunk(branch.path, rev)
         chunk.end = rev
 
-
-
-    def generate_actions(self):
-        chunks = self.generate_chunklist()
-        for chunk in chunks:
-            branch = chunk.branch
-            # dont yield actions for replays without change
-            changesets = chunk.changesets()
-            if not changesets:
-                continue
-
-            yield 'replay', chunk
-            if branch.end is not None and chunk.end > max(branch.changesets or [chunk.end]):
-                yield 'close', chunk

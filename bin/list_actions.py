@@ -10,11 +10,9 @@ with open(sys.argv[1]) as fp:
 
 br = BranchReplay.from_json(data)
 
-er = EventReplay(br)
-er._add_replay()
+er = EventReplay()
+er.add_replay(br)
 
-#for chunk in er.generate_chunklist():
-#    print chunk
+for chunk in er.generate_chunklist():
+    print chunk
 
-for action, chunk in er.generate_actions():
-    print action, chunk
