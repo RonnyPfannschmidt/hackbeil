@@ -55,6 +55,20 @@ def svnrev(ctx):
 
     return int(rev)
 
+
+
+
+def maybe_replay_commit(repo, base, source_ctx, target_branch=None):
+    target = repo[base]
+    se = source_ctx.extra()
+    for child in target.children():
+        ce = child.extra()
+        ce['convert_revision'] == se['convert_revision']
+        return child.rev()
+    return replay_commit(repo, base, source_ctx, target_branch)
+
+
+
 for idx, chunk in enumerate(chunks):
     source_repo_name = targetdirname(chunk.branch)
     ui.status('replaying chunk %s %s/%s\n'%(chunk, idx+1, len(chunks)))
@@ -87,9 +101,10 @@ for idx, chunk in enumerate(chunks):
                 chunk.nextbase = base
                 break
             else:
-                base = replay_commit(target_repo, base=base, source_ctx=source_ctx, target_branch=chunk.guessed_name())
+                base = maybe_replay_commit(target_repo, base=base, source_ctx=source_ctx, target_branch=chunk.guessed_name())
                 rev += 1
         ui.progress('replay ' + source_repo_name, pos=None)
+        tr.close()
 
 
 
