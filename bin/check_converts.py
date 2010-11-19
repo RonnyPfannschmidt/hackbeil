@@ -3,7 +3,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('replay', type=argparse.FileType('r'))
 parser.add_argument('basedir')
-
+parser.add_argument('target')
 
 options = parser.parse_args()
 
@@ -51,20 +51,61 @@ ui.status('difference: %s\n'%(commits - changesets))
 
 from hackbeil.histevents import EventReplay
 
+ui.status('beginning chunk scanning\n')
 er = EventReplay()
 er.add_replay(br)
-for idx, chunk in enumerate(er.generate_chunklist()):
 
-    branch = chunk.branch
-    td = targetdirname(branch)
-    ui.progress('scanning chunk', pos=idx, item=str(chunk))
+if 0:
+    ui.status('scanning separate chunks')
+    for idx, chunk in enumerate(er.generate_chunklist()):
 
-    repo = mercurial.localrepo.localrepository(ui, os.path.join(options.basedir, td))
-    changesets = chunk.changesets()
-    for commit in repo:
-        ctx = repo[commit]
-        changesets.discard(int(ctx.extra()['convert_revision'].split('@')[-1]))
+        branch = chunk.branch
+        td = targetdirname(branch)
+        ui.progress('scanning chunk ' + td, pos=idx, item=str(chunk))
 
-    if changesets:
-        ui.status('%s %s %s\n'%(branch, chunk, changesets))
+        repo = mercurial.localrepo.localrepository(ui, os.path.join(options.basedir, td))
+        changesets = chunk.changesets()
+        for commit in repo:
+            ctx = repo[commit]
+            changesets.discard(int(ctx.extra()['convert_revision'].split('@')[-1]))
+
+        if changesets:
+            ui.status('%s %s %s\n'%(branch, chunk, changesets))
+
+ui.status('scanning target\n')
+
+repo = mercurial.localrepo.localrepository(ui, options.target)
+
+for commit in repo:
+    ui.progress('scanning target', pos=commit+1, total=len(repo))
+    ctx = repo[commit]
+    crev = ctx.extra().get('convert_revision')
+    if crev is not None:
+        branch, rev = crev.rsplit('@')
+        branch = branch.split('/',1)[-1]
+        rev = int(rev)
+        branch = br.findbranch(branch, rev)
+
+        assert branch is not None, crev
+
+        if rev == branch.start:
+            branch.changesets.discard(rev)
+        else:
+            if rev in branch.changesets:
+                branch.changesets.remove(rev)
+            else:
+                ui.debug('%s missing %s\n' % (branch, rev))
+
+
+ui.status('finding branches missing in target\n')
+
+number = 0
+missing = 0
+for branch in br.branch_history:
+    if branch.changesets:
+        ui.status('%s has %s unconverted revisions\n'% (branch, len(branch.changesets)))
+        number+=1
+        missing +=len(branch.changesets)
+
+ui.status('%s branches have %s unconverted changesets\n' %(number, missing))
 
