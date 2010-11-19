@@ -73,14 +73,17 @@ class EventReplay(object):
             oldchunk = self.findchunk(newbranch.source_branch,
                                       newbranch.source_rev)
 
-            if oldchunk.end is None:
-                oldchunk.end = rev
-                newchunk = Chunk(start=rev,
-                                 branch=oldchunk.branch,
-                                 parent=oldchunk)
-                self.chunks.insert(
-                    self.chunks.index(oldchunk)+1,
-                    newchunk)
+            old_end = oldchunk.end
+            oldchunk.end = rev
+            newchunk = Chunk(start=rev,
+                             branch=oldchunk.branch,
+                             parent=oldchunk)
+            newchunk.end = old_end
+            self.chunks.append(newchunk)
+
+                #self.chunks.insert(
+                #   self.chunks.index(oldchunk)+1,
+                #   newchunk)
         else:
             oldchunk = None
         chunk = Chunk(start=rev,
