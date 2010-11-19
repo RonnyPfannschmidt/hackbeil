@@ -59,7 +59,6 @@ def copying_fctxfn(stitch_root):
     def filectx(repo, ctx, path):
         if path not in stitch_root:
             raise IOError()
-
         other = stitch_root[path]
         copy = other.renamed() and other.renamed()[0]
         return context.memfilectx(
@@ -97,7 +96,6 @@ def close_commit(repo, lookup, date=None):
 
 
 def replay_commit(repo, base, source_ctx, target_branch=None):
-
     if len(source_ctx.parents()) == 1 and source_ctx.parents()[0].rev()==-1:
         files = sorted(set(source_ctx)|set(repo[base]))
     else:
