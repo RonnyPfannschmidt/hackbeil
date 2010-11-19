@@ -18,7 +18,9 @@ parser.add_argument('target_repo')
 
 options = parser.parse_args()
 
-
+import pdb
+import sys
+sys.excepthook = lambda*k: pdb.pm()
 
 ui = progressui()
 ui.status('reading replay\n')
@@ -114,7 +116,7 @@ for idx, chunk in enumerate(chunks):
                 chunk.nextbase = base
                 break
             else:
-                base = maybe_replay_commit(target_repo, base=base, source_ctx=source_ctx, target_branch=chunk.guessed_name())
+                base = maybe_replay_commit(target_repo, base=base, source_ctx=source_ctx, target_branch=str(chunk.guessed_name()))
                 rev += 1
                 total_converted += 1
         tr.close()
