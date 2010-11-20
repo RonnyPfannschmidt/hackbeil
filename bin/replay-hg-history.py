@@ -65,13 +65,16 @@ def svnrev(ctx):
 
 
 ui.status('building lookup table for completed commits\n')
-
 completed_lookup = {}
+closed_commits = set()
 
 for commit in target_repo:
     ui.progress('scanning', pos=commit+1, total=len(target_repo))
-    convert_rev = target_repo[commit].extra().get('convert_revision')
+    ctx = target_repo[commit]
+    convert_rev = ctx.extra().get('convert_revision')
     completed_lookup[convert_rev] = commit
+    if ctx.extra().get('close'):
+        closed_commits.add(ctx.parents()[0].rev())
 
 
 def maybe_replay_commit(repo, base, source_ctx, target_branch=None):
@@ -115,6 +118,9 @@ for idx, chunk in enumerate(chunks):
             if rev == len(source_repo) or (chunk.end and svnrev(source_ctx) >= chunk.end):
                 chunk.nextrev = rev
                 chunk.nextbase = base
+                if chunk.end is not None and chunk.end == chunk.branch.end:
+                    if base not in closed_commits:
+                        close_commit(target_repo, base)
                 break
             else:
                 base = maybe_replay_commit(target_repo, base=base, source_ctx=source_ctx, target_branch=str(chunk.guessed_name()))
