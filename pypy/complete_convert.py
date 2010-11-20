@@ -31,5 +31,5 @@ if 'convert' in args:
     call('convert-via-replay.py', replay, svnrepo ,converts, authormap)
 if 'combine' in args:
     if not py.path.local(target).check(dir=1):
-        subprocess.checked_call(['hg', 'init', 'target'])
+        subprocess.check_call(['hg', 'init', target])
     call('replay-hg-history.py', replay, converts, target)
