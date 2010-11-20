@@ -24,6 +24,9 @@ def call(cmd, *args):
 
 import sys
 args = sys.argv[1:]
+
+if 'sync' in args:
+    subprocess.check_call(['svnsync', 'sync', svnrepo])
 if 'replay' in args:
     call('svn-dump2replay-on-the-fly.py', replay, svnrepo)
 
@@ -33,3 +36,5 @@ if 'combine' in args:
     if not py.path.local(target).check(dir=1):
         subprocess.check_call(['hg', 'init', target])
     call('replay-hg-history.py', replay, converts, target)
+if 'push' in args:
+    subprocess.check_call(['hg', '-R', target, 'push', 'bb:pypy-test'])
