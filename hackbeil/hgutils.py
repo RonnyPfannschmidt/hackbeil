@@ -21,6 +21,18 @@ def abort_on_error(transaction):
         transaction.close()
 
 
+def svnrev(ctx):
+    try:
+
+        convert_revision = ctx.extra()['convert_revision']
+    except KeyError:
+        ctx._repo.ui.status('%s@%s has extra %s'%(ctx._repo.root, ctx.rev(), ctx.extra()))
+        raise
+    base, _, rev = convert_revision.rpartition('@')
+
+    return int(rev)
+
+
 def find_svn_rev(repo, wanted_branch, wanted_rev):
     ui = repo.ui
 
