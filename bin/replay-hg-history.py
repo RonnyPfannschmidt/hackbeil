@@ -2,7 +2,7 @@
 import json
 import os
 from argparse import ArgumentParser
-from hackbeil.hgutils import progressui, replay_commit, close_commit, abort_on_error
+from hackbeil.hgutils import progressui, replay_commit, close_commit, abort_on_error, svnrev
 from hackbeil.branchreplay import BranchReplay
 from hackbeil.histevents import EventReplay
 
@@ -52,16 +52,6 @@ for idx, branch in enumerate(br.branch_history):
 ui.status('creating target %s\n' % options.target_repo)
 target_repo = localrepo.localrepository(ui, options.target_repo)
 
-def svnrev(ctx):
-    try:
-
-        convert_revision = ctx.extra()['convert_revision']
-    except KeyError:
-        ctx._repo.ui.status('%s@%s has extra %s'%(ctx._repo.root, ctx.rev(), ctx.extra()))
-        raise
-    base, _, rev = convert_revision.rpartition('@')
-
-    return int(rev)
 
 
 ui.status('building lookup table for completed commits\n')
