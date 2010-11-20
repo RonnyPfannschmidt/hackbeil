@@ -1,25 +1,26 @@
 from os import path
-
+import posixpath
 def targetdirname(branch):
     return '{base}@{start}'.format(
         base=branch.path.split('/')[-1],
         start=branch.start,
     )
 
-def do_convert(converter, branch, repo, basedir):
+def do_convert(converter, branch, repo, basedir, authormap):
     targetdir = targetdirname(branch)
 
     call_args = {
-        'source': repo + branch.path,
+        'source': posixpath.join(repo, branch.path),
         'start': branch.start,
         'end': (' -r %s' % (branch.end-1)) if branch.end is not None else '',
         'dest': path.join(basedir, targetdir),
+        'authormap': authormap,
     }
 
     converter(**call_args)
 
 
-def convert_all(ui, replay, convert_call, repo, basedir):
+def convert_all(ui, replay, convert_call, repo, basedir, authormap):
     for idx, branch in enumerate(replay.branch_history):
         name = targetdirname(branch)
         ui.status('%s %s/%s\n'%(name, idx, len(replay.branch_history))),
@@ -28,5 +29,5 @@ def convert_all(ui, replay, convert_call, repo, basedir):
                     total=len(replay.branch_history),
                     item=name,
                    )
-        do_convert(convert_call, branch, repo, basedir)
+        do_convert(convert_call, branch, repo, basedir, authormap)
 
