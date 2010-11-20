@@ -5,6 +5,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('replay')
 parser.add_argument('svnroot')
 parser.add_argument('basedir')
+parser.add_argument('authormap')
 
 options = parser.parse_args()
 
@@ -27,7 +28,8 @@ def call_convert(**args):
     
     command = (
         'hg convert -q -s svn {source} {dest} '
-        '--config convert.svn.startrev={start}{end}'
+        '--config convert.svn.startrev={start}{end} '
+        '--authormap {authormap}'
     )
     subprocess.check_call(command.format(**args), shell=True)
 
@@ -43,7 +45,7 @@ def call_hgsubversion(**args):
 
 ui = progressui()
 
-convert_all(ui, replay, call_convert, options.svnroot, options.basedir)
+convert_all(ui, replay, call_convert, options.svnroot, options.basedir, options.authormap)
 
 ui.status('weeeeeeeeee\n')
 
