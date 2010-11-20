@@ -25,9 +25,11 @@ def call(cmd, *args):
 import sys
 args = sys.argv[1:]
 if 'replay' in args:
-    pass
+    call('svn-dump2replay-on-the-fly.py', replay, svnrepo)
 
 if 'convert' in args:
     call('convert-via-replay.py', replay, svnrepo ,converts, authormap)
 if 'combine' in args:
+    if not py.path.local(target).check(dir=1):
+        subprocess.checked_call(['hg', 'init', 'target'])
     call('replay-hg-history.py', replay, converts, target)
