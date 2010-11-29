@@ -108,7 +108,7 @@ def close_commit(repo, lookup, date=None):
 
 
 def replay_commit(repo, base, source_ctx, target_branch=None):
-    if len(source_ctx.parents()) == 1 and source_ctx.parents()[0].rev()==-1:
+    if source_ctx.parents()[0].rev()==-1:
         files = sorted(set(source_ctx)|set(repo[base]))
     else:
         # only apply our changes if not a root
