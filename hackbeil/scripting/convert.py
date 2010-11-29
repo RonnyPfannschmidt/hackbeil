@@ -32,7 +32,7 @@ def convert_all(ui, replay, convert_call, repo, basedir, authormap):
                     total=len(replay.branch_history),
                     item=name,
                    )
-        if branch.end:
+        if branch.end and path.exists(path.join(basedir, name)):
             #XXX: fragility?
             dest = localrepository(ui, path.join(basedir, name))
             tip = dest['tip']
