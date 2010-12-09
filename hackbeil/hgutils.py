@@ -73,6 +73,7 @@ def copying_fctxfn(stitch_root):
             raise IOError()
         other = stitch_root[path]
         copy = other.renamed() and other.renamed()[0]
+
         return context.memfilectx(
             path=path,
             data=other.data(),
