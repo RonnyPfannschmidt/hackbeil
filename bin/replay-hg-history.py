@@ -67,7 +67,12 @@ for commit in target_repo:
         closed_commits.add(ctx.parents()[0].rev())
 
 ignore_svnrevs = set([
+    10389, # pypy-normalize-exception merge
+    13150, # removes trunk to copy over lltype-refactoring
+    14327, # another delete before merge
     20004,
+    20558, #somepbc
+    20557, #somepbc
 ])
 
 def crev(ctx): return ctx.extra().get('convert_revision')
