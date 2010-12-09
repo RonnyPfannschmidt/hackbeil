@@ -67,11 +67,7 @@ for commit in target_repo:
         closed_commits.add(ctx.parents()[0].rev())
 
 ignore_svnrevs = set([
-    67882,
-    67883,
-    67884,
-    67885,
-    67886,
+    20004,
 ])
 
 def crev(ctx): return ctx.extra().get('convert_revision')
@@ -81,8 +77,13 @@ def maybe_replay_commit(repo, base, source_ctx, target_branch=None):
     convert_rev = crev(source_ctx)
     if convert_rev in completed_lookup:
         return completed_lookup[convert_rev]
-    # skipping
+    # skipping specific bad commits
     if svnrev(source_ctx) in ignore_svnrevs:
+        return base
+
+    # skipping weird merge tmp commits
+    files = source_ctx.files()
+    if len(files) == 1 and files[0].endswith('.merge.tmp'):
         return base
 
     unrelated = source_ctx.parents()[0].rev() == -1 or \
