@@ -136,7 +136,7 @@ for idx, chunk in enumerate(chunks):
                 base = maybe_replay_commit(target_repo,
                                            base=base,
                                            source_ctx=source_ctx,
-                                           target_branch=str(chunk.guessed_name()),
+                                           target_branch=str(chunk.guessed_name()).split('@')[0]
                                           )
                 rev += 1
                 total_converted += 1

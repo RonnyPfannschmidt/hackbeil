@@ -34,7 +34,7 @@ class Chunk(object):
             if self.end is None:
                 return self.branch.path.split('/')[-1]
             else:
-                return 'historic/' + targetdirname(self.branch)
+                return targetdirname(self.branch)
 
     def __repr__(self):
         return '<{branch.path}@{start}-{end}>'.format(**vars(self))
