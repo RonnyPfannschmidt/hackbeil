@@ -37,4 +37,4 @@ if 'combine' in args:
         subprocess.check_call(['hg', 'init', target])
     call('replay-hg-history.py', replay, converts, target)
 if 'push' in args:
-    subprocess.check_call(['hg', '-R', target, 'push', '-f', 'bb:pypy-test'])
+    subprocess.check_call(['hg', '-R', target, 'push', '-f', 'bb:pypy/pypy'])
